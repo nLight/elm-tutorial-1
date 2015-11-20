@@ -13,26 +13,47 @@ Elm.Spreadsheet.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
-   var model = $Array.fromList(_L.fromArray([$Array.fromList(_L.fromArray([1
-                                                                          ,2
-                                                                          ,3
-                                                                          ,4]))
-                                            ,$Array.fromList(_L.fromArray([1
-                                                                          ,2
-                                                                          ,3
-                                                                          ,4]))]));
+   var extractValue = function (m) {
+      return function () {
+         switch (m.ctor)
+         {case "Left":
+            return $Basics.toString(m._0);
+            case "Right": return m._0;}
+         _U.badCase($moduleName,
+         "between lines 38 and 40");
+      }();
+   };
+   var UpdateCell = F3(function (a,
+   b,
+   c) {
+      return {ctor: "UpdateCell"
+             ,_0: a
+             ,_1: b
+             ,_2: c};
+   });
    var cell = F4(function (address,
    i,
    j,
    data) {
       return A2($Html.td,
       _L.fromArray([]),
-      _L.fromArray([$Html.text($Basics.toString(data))]));
+      _L.fromArray([A2($Html.input,
+      _L.fromArray([$Html$Attributes.value(extractValue(data))
+                   ,A3($Html$Events.on,
+                   "input",
+                   $Html$Events.targetValue,
+                   function ($) {
+                      return $Signal.message(address)(A2(UpdateCell,
+                      i,
+                      j)($));
+                   })]),
+      _L.fromArray([]))]));
    });
    var row = F3(function (address,
    i,
@@ -55,23 +76,51 @@ Elm.Spreadsheet.make = function (_elm) {
       row(address),
       model)))]))]));
    });
+   var NoOp = {ctor: "NoOp"};
+   var Right = function (a) {
+      return {ctor: "Right",_0: a};
+   };
    var update = F2(function (action,
    model) {
       return function () {
          switch (action.ctor)
-         {case "NoOp": return model;}
+         {case "NoOp": return model;
+            case "UpdateCell":
+            return function () {
+                 var r = A2($Maybe.withDefault,
+                 $Array.empty,
+                 A2($Array.get,action._0,model));
+                 var r$ = A3($Array.set,
+                 action._1,
+                 Right(action._2),
+                 r);
+                 return A3($Array.set,
+                 action._0,
+                 r$,
+                 model);
+              }();}
          _U.badCase($moduleName,
-         "between lines 17 and 18");
+         "between lines 26 and 33");
       }();
    });
+   var Left = function (a) {
+      return {ctor: "Left",_0: a};
+   };
+   var model = $Array.fromList(_L.fromArray([$Array.fromList(_L.fromArray([Left(1)
+                                                                          ,Left(2)]))
+                                            ,$Array.fromList(_L.fromArray([Left(1)
+                                                                          ,Left(2)]))]));
    var main = $StartApp$Simple.start({_: {}
                                      ,model: model
                                      ,update: update
                                      ,view: view});
-   var NoOp = {ctor: "NoOp"};
    _elm.Spreadsheet.values = {_op: _op
+                             ,Left: Left
+                             ,Right: Right
                              ,NoOp: NoOp
+                             ,UpdateCell: UpdateCell
                              ,update: update
+                             ,extractValue: extractValue
                              ,cell: cell
                              ,row: row
                              ,view: view

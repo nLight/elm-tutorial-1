@@ -2938,6 +2938,11 @@ Elm.Html.Attributes.make = function (_elm) {
    $String = Elm.String.make(_elm),
    $VirtualDom = Elm.VirtualDom.make(_elm);
    var attribute = $VirtualDom.attribute;
+   var contextmenu = function (value) {
+      return A2(attribute,
+      "contextmenu",
+      value);
+   };
    var property = $VirtualDom.property;
    var stringProperty = F2(function (name,
    string) {
@@ -2962,13 +2967,8 @@ Elm.Html.Attributes.make = function (_elm) {
    };
    var accesskey = function ($char) {
       return A2(stringProperty,
-      "accesskey",
-      $String.fromList(_L.fromArray([$char])));
-   };
-   var contextmenu = function (value) {
-      return A2(stringProperty,
-      "contextmenu",
-      value);
+      "accessKey",
+      $String.fromChar($char));
    };
    var dir = function (value) {
       return A2(stringProperty,
@@ -3117,7 +3117,7 @@ Elm.Html.Attributes.make = function (_elm) {
    };
    var formaction = function (value) {
       return A2(stringProperty,
-      "formaction",
+      "formAction",
       value);
    };
    var list = function (value) {
@@ -3543,6 +3543,113 @@ Elm.Html.Attributes.make = function (_elm) {
                                  ,property: property
                                  ,attribute: attribute};
    return _elm.Html.Attributes.values;
+};
+Elm.Html = Elm.Html || {};
+Elm.Html.Events = Elm.Html.Events || {};
+Elm.Html.Events.make = function (_elm) {
+   "use strict";
+   _elm.Html = _elm.Html || {};
+   _elm.Html.Events = _elm.Html.Events || {};
+   if (_elm.Html.Events.values)
+   return _elm.Html.Events.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Html.Events",
+   $Basics = Elm.Basics.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Json$Decode = Elm.Json.Decode.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $VirtualDom = Elm.VirtualDom.make(_elm);
+   var keyCode = A2($Json$Decode._op[":="],
+   "keyCode",
+   $Json$Decode.$int);
+   var targetChecked = A2($Json$Decode.at,
+   _L.fromArray(["target"
+                ,"checked"]),
+   $Json$Decode.bool);
+   var targetValue = A2($Json$Decode.at,
+   _L.fromArray(["target"
+                ,"value"]),
+   $Json$Decode.string);
+   var defaultOptions = $VirtualDom.defaultOptions;
+   var Options = F2(function (a,
+   b) {
+      return {_: {}
+             ,preventDefault: b
+             ,stopPropagation: a};
+   });
+   var onWithOptions = $VirtualDom.onWithOptions;
+   var on = $VirtualDom.on;
+   var messageOn = F3(function (name,
+   addr,
+   msg) {
+      return A3(on,
+      name,
+      $Json$Decode.value,
+      function (_v0) {
+         return function () {
+            return A2($Signal.message,
+            addr,
+            msg);
+         }();
+      });
+   });
+   var onClick = messageOn("click");
+   var onDoubleClick = messageOn("dblclick");
+   var onMouseMove = messageOn("mousemove");
+   var onMouseDown = messageOn("mousedown");
+   var onMouseUp = messageOn("mouseup");
+   var onMouseEnter = messageOn("mouseenter");
+   var onMouseLeave = messageOn("mouseleave");
+   var onMouseOver = messageOn("mouseover");
+   var onMouseOut = messageOn("mouseout");
+   var onBlur = messageOn("blur");
+   var onFocus = messageOn("focus");
+   var onSubmit = messageOn("submit");
+   var onKey = F3(function (name,
+   addr,
+   handler) {
+      return A3(on,
+      name,
+      keyCode,
+      function (code) {
+         return A2($Signal.message,
+         addr,
+         handler(code));
+      });
+   });
+   var onKeyUp = onKey("keyup");
+   var onKeyDown = onKey("keydown");
+   var onKeyPress = onKey("keypress");
+   _elm.Html.Events.values = {_op: _op
+                             ,onBlur: onBlur
+                             ,onFocus: onFocus
+                             ,onSubmit: onSubmit
+                             ,onKeyUp: onKeyUp
+                             ,onKeyDown: onKeyDown
+                             ,onKeyPress: onKeyPress
+                             ,onClick: onClick
+                             ,onDoubleClick: onDoubleClick
+                             ,onMouseMove: onMouseMove
+                             ,onMouseDown: onMouseDown
+                             ,onMouseUp: onMouseUp
+                             ,onMouseEnter: onMouseEnter
+                             ,onMouseLeave: onMouseLeave
+                             ,onMouseOver: onMouseOver
+                             ,onMouseOut: onMouseOut
+                             ,on: on
+                             ,onWithOptions: onWithOptions
+                             ,defaultOptions: defaultOptions
+                             ,targetValue: targetValue
+                             ,targetChecked: targetChecked
+                             ,keyCode: keyCode
+                             ,Options: Options};
+   return _elm.Html.Events.values;
 };
 Elm.Json = Elm.Json || {};
 Elm.Json.Decode = Elm.Json.Decode || {};
@@ -12226,26 +12333,47 @@ Elm.Spreadsheet.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $Html$Events = Elm.Html.Events.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
-   var model = $Array.fromList(_L.fromArray([$Array.fromList(_L.fromArray([1
-                                                                          ,2
-                                                                          ,3
-                                                                          ,4]))
-                                            ,$Array.fromList(_L.fromArray([1
-                                                                          ,2
-                                                                          ,3
-                                                                          ,4]))]));
+   var extract = function (m) {
+      return function () {
+         switch (m.ctor)
+         {case "Left":
+            return $Basics.toString(m._0);
+            case "Right": return m._0;}
+         _U.badCase($moduleName,
+         "between lines 38 and 40");
+      }();
+   };
+   var UpdateCell = F3(function (a,
+   b,
+   c) {
+      return {ctor: "UpdateCell"
+             ,_0: a
+             ,_1: b
+             ,_2: c};
+   });
    var cell = F4(function (address,
    i,
    j,
    data) {
       return A2($Html.td,
       _L.fromArray([]),
-      _L.fromArray([$Html.text($Basics.toString(data))]));
+      _L.fromArray([A2($Html.input,
+      _L.fromArray([$Html$Attributes.value(extract(data))
+                   ,A3($Html$Events.on,
+                   "input",
+                   $Html$Events.targetValue,
+                   function ($) {
+                      return $Signal.message(address)(A2(UpdateCell,
+                      i,
+                      j)($));
+                   })]),
+      _L.fromArray([]))]));
    });
    var row = F3(function (address,
    i,
@@ -12268,23 +12396,51 @@ Elm.Spreadsheet.make = function (_elm) {
       row(address),
       model)))]))]));
    });
+   var NoOp = {ctor: "NoOp"};
+   var Right = function (a) {
+      return {ctor: "Right",_0: a};
+   };
    var update = F2(function (action,
    model) {
       return function () {
          switch (action.ctor)
-         {case "NoOp": return model;}
+         {case "NoOp": return model;
+            case "UpdateCell":
+            return function () {
+                 var r = A2($Maybe.withDefault,
+                 $Array.empty,
+                 A2($Array.get,action._0,model));
+                 var r$ = A3($Array.set,
+                 action._1,
+                 Right(action._2),
+                 r);
+                 return A3($Array.set,
+                 action._0,
+                 r$,
+                 model);
+              }();}
          _U.badCase($moduleName,
-         "between lines 17 and 18");
+         "between lines 26 and 33");
       }();
    });
+   var Left = function (a) {
+      return {ctor: "Left",_0: a};
+   };
+   var model = $Array.fromList(_L.fromArray([$Array.fromList(_L.fromArray([Left(1)
+                                                                          ,Left(2)]))
+                                            ,$Array.fromList(_L.fromArray([Left(1)
+                                                                          ,Left(2)]))]));
    var main = $StartApp$Simple.start({_: {}
                                      ,model: model
                                      ,update: update
                                      ,view: view});
-   var NoOp = {ctor: "NoOp"};
    _elm.Spreadsheet.values = {_op: _op
+                             ,Left: Left
+                             ,Right: Right
                              ,NoOp: NoOp
+                             ,UpdateCell: UpdateCell
                              ,update: update
+                             ,extract: extract
                              ,cell: cell
                              ,row: row
                              ,view: view
@@ -12306,6 +12462,7 @@ Elm.StartApp.Simple.make = function (_elm) {
    _L = _N.List.make(_elm),
    $moduleName = "StartApp.Simple",
    $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
    $Html = Elm.Html.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
@@ -12313,22 +12470,26 @@ Elm.StartApp.Simple.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm);
    var start = function (config) {
       return function () {
+         var update = F2(function (maybeAction,
+         model) {
+            return function () {
+               switch (maybeAction.ctor)
+               {case "Just":
+                  return A2(config.update,
+                    maybeAction._0,
+                    model);
+                  case "Nothing":
+                  return $Debug.crash("This should never happen.");}
+               _U.badCase($moduleName,
+               "between lines 91 and 98");
+            }();
+         });
          var actions = $Signal.mailbox($Maybe.Nothing);
          var address = A2($Signal.forwardTo,
          actions.address,
          $Maybe.Just);
          var model = A3($Signal.foldp,
-         F2(function (_v0,model) {
-            return function () {
-               switch (_v0.ctor)
-               {case "Just":
-                  return A2(config.update,
-                    _v0._0,
-                    model);}
-               _U.badCase($moduleName,
-               "on line 91, column 34 to 60");
-            }();
-         }),
+         update,
          config.model,
          actions.signal);
          return A2($Signal.map,

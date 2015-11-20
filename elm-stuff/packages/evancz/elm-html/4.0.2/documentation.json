@@ -21,7 +21,7 @@
         "type": "(a -> b -> c -> Html.Html) -> a -> b -> c -> Html.Html"
       }
     ],
-    "generated-with-elm-version": "0.15.1"
+    "generated-with-elm-version": "0.16.0"
   },
   {
     "name": "Html.Events",
@@ -133,20 +133,20 @@
       },
       {
         "name": "targetChecked",
-        "comment": " A `Json.Decoder` for grabbing `event.target.checked` from the triggered\nevent. This is useful for input event on checkboxes.\n\n    onInput : Signal.Address a -> (Bool -> a) -> Attribute\n    onInput address contentToValue =\n        on \"input\" targetChecked (\\bool -> Signal.message addr (contentToValue bool))\n",
+        "comment": " A `Json.Decoder` for grabbing `event.target.checked` from the triggered\nevent. This is useful for input event on checkboxes.\n\n    onInput : Signal.Address a -> (Bool -> a) -> Attribute\n    onInput address contentToValue =\n        on \"input\" targetChecked (\\bool -> Signal.message address (contentToValue bool))\n",
         "type": "Json.Decode.Decoder Bool"
       },
       {
         "name": "targetValue",
-        "comment": " A `Json.Decoder` for grabbing `event.target.value` from the triggered\nevent. This is often useful for input event on text fields.\n\n    onInput : Signal.Address a -> (String -> a) -> Attribute\n    onInput address contentToValue =\n        on \"input\" targetValue (\\str -> Signal.message addr (contentToValue str))\n",
+        "comment": " A `Json.Decoder` for grabbing `event.target.value` from the triggered\nevent. This is often useful for input event on text fields.\n\n    onInput : Signal.Address a -> (String -> a) -> Attribute\n    onInput address contentToValue =\n        on \"input\" targetValue (\\str -> Signal.message address (contentToValue str))\n",
         "type": "Json.Decode.Decoder String"
       }
     ],
-    "generated-with-elm-version": "0.15.1"
+    "generated-with-elm-version": "0.16.0"
   },
   {
     "name": "Html.Attributes",
-    "comment": " Helper functions for HTML attributes. They are organized roughly by\ncategory. Each attribute is labeled with the HTML tags it can be used with, so\njust search the page for `video` if you want video stuff.\n\nIf you cannot find what you are looking for, go to the [Custom\nAttributes](#custom-attributes) section to learn how to create new helpers.\n\n# Special Attributes\n@docs key, style\n\n# Super Common Attributes\n@docs class, classList, id, title, hidden\n\n# Inputs\n@docs type', value, checked, placeholder, selected\n\n## Input Helpers\n@docs accept, acceptCharset, action, autocomplete, autofocus, autosave,\n    disabled, enctype, formaction, list, maxlength, minlength, method, multiple,\n    name, novalidate, pattern, readonly, required, size, for, form\n\n## Input Ranges\n@docs max, min, step\n\n## Input Text Areas\n@docs cols, rows, wrap\n\n\n# Links and Areas\n@docs href, target, download, downloadAs, hreflang, media, ping, rel\n\n## Maps\n@docs ismap, usemap, shape, coords\n\n\n# Embedded Content\n@docs src, height, width, alt\n\n## Audio and Video\n@docs autoplay, controls, loop, preload, poster, default, kind, srclang\n\n## iframes\n@docs sandbox, seamless, srcdoc\n\n# Ordered Lists\n@docs reversed, start\n\n# Tables\n@docs align, colspan, rowspan, headers, scope\n\n# Header Stuff\n@docs async, charset, content, defer, httpEquiv, language, scoped\n\n# Less Common Global Attributes\nAttributes that can be attached to any HTML tag but are less commonly used.\n@docs accesskey, contenteditable, contextmenu, dir, draggable, dropzone,\n      itemprop, lang, spellcheck, tabindex\n\n# Key Generation\n@docs challenge, keytype\n\n# Miscellaneous\n@docs cite, datetime, pubdate, manifest\n\n# Custom Attributes\n\nWhen using HTML and JS, there are two ways to specify parts of a DOM node.\n\n  1. Attributes &mdash; You can set things in HTML itself. So the `class`\n     in `\u003cdiv class=\"greeting\">\u003c/div>` is called an *attribute*.\n\n  2. Properties &mdash; You can also set things in JS. So the `className`\n     in `div.className = 'greeting'` is called a *property*.\n\nSo the `class` attribute corresponds to the `className` property. At first\nglance, perhaps this distinction is defensible, but it gets much crazier.\n*There is not always a one-to-one mapping between attributes and properties!*\nYes, that is a true fact. Sometimes an attribute exists, but there is no\ncorresponding property. Sometimes changing an attribute does not change the\nunderlying property. For example, as of this writing the `webkit-playsinline`\nattribute can be used in HTML, but there is no corresponding property!\n\nPretty much all of the functions in `Html.Attributes` are defined with\n`property` and that is generally the preferred approach.\n\n@docs property, attribute\n\n",
+    "comment": " Helper functions for HTML attributes. They are organized roughly by\ncategory. Each attribute is labeled with the HTML tags it can be used with, so\njust search the page for `video` if you want video stuff.\n\nIf you cannot find what you are looking for, go to the [Custom\nAttributes](#custom-attributes) section to learn how to create new helpers.\n\n# Special Attributes\n@docs key, style\n\n# Super Common Attributes\n@docs class, classList, id, title, hidden\n\n# Inputs\n@docs type', value, checked, placeholder, selected\n\n## Input Helpers\n@docs accept, acceptCharset, action, autocomplete, autofocus, autosave,\n    disabled, enctype, formaction, list, maxlength, minlength, method, multiple,\n    name, novalidate, pattern, readonly, required, size, for, form\n\n## Input Ranges\n@docs max, min, step\n\n## Input Text Areas\n@docs cols, rows, wrap\n\n\n# Links and Areas\n@docs href, target, download, downloadAs, hreflang, media, ping, rel\n\n## Maps\n@docs ismap, usemap, shape, coords\n\n\n# Embedded Content\n@docs src, height, width, alt\n\n## Audio and Video\n@docs autoplay, controls, loop, preload, poster, default, kind, srclang\n\n## iframes\n@docs sandbox, seamless, srcdoc\n\n# Ordered Lists\n@docs reversed, start\n\n# Tables\n@docs align, colspan, rowspan, headers, scope\n\n# Header Stuff\n@docs async, charset, content, defer, httpEquiv, language, scoped\n\n# Less Common Global Attributes\nAttributes that can be attached to any HTML tag but are less commonly used.\n@docs accesskey, contenteditable, contextmenu, dir, draggable, dropzone,\n      itemprop, lang, spellcheck, tabindex\n\n# Key Generation\n@docs challenge, keytype\n\n# Miscellaneous\n@docs cite, datetime, pubdate, manifest\n\n# Custom Attributes\n\nWhen using HTML and JS, there are two ways to specify parts of a DOM node.\n\n  1. Attributes &mdash; You can set things in HTML itself. So the `class`\n     in `<div class=\"greeting\"></div>` is called an *attribute*.\n\n  2. Properties &mdash; You can also set things in JS. So the `className`\n     in `div.className = 'greeting'` is called a *property*.\n\nSo the `class` attribute corresponds to the `className` property. At first\nglance, perhaps this distinction is defensible, but it gets much crazier.\n*There is not always a one-to-one mapping between attributes and properties!*\nYes, that is a true fact. Sometimes an attribute exists, but there is no\ncorresponding property. Sometimes changing an attribute does not change the\nunderlying property. For example, as of this writing the `webkit-playsinline`\nattribute can be used in HTML, but there is no corresponding property!\n\nPretty much all of the functions in `Html.Attributes` are defined with\n`property` and that is generally the preferred approach.\n\n@docs property, attribute\n\n",
     "aliases": [],
     "types": [],
     "values": [
@@ -646,7 +646,7 @@
         "type": "String -> Html.Attribute"
       }
     ],
-    "generated-with-elm-version": "0.15.1"
+    "generated-with-elm-version": "0.16.0"
   },
   {
     "name": "Html",
@@ -1183,6 +1183,6 @@
         "type": "List Html.Attribute -> List Html.Html -> Html.Html"
       }
     ],
-    "generated-with-elm-version": "0.15.1"
+    "generated-with-elm-version": "0.16.0"
   }
 ]
