@@ -5,7 +5,9 @@ import Html.Events exposing (on, targetValue)
 import StartApp.Simple exposing (start)
 import Array exposing (Array)
 import Maybe exposing (withDefault)
--- import String
+import Char
+import String
+
 
 type Either a b
     = Left a
@@ -52,23 +54,50 @@ cell address i j data =
 
 row : Signal.Address Action -> Int -> RowModel -> Html
 row address i data =
-  tr [] (Array.indexedMap (cell address i) data |> Array.toList)
+  tr []
+  (th [] [ text (toString (i + 1)) ] :: (Array.indexedMap (cell address i) data |> Array.toList))
+
+
+toLiteral : Int -> String
+toLiteral i =
+  toLiteral' "" i
+
+
+toLiteral' acc i =
+  case i of
+    0 -> acc
+    _ ->
+      let
+        modulo = (i - 1) % 26
+        name = (Char.fromCode (65 + modulo) |> String.fromChar) ++ acc
+        i' = (i - modulo) // 26
+      in
+        toLiteral' name i'
+
+
+header : Model -> Html
+header model =
+  let
+    r = withDefault Array.empty (Array.get 0 model)
+  in
+    tr []
+    (td [][] :: ((Array.indexedMap (\i a -> th [] [text (toLiteral (i+1))]) r) |> Array.toList))
 
 
 view : Signal.Address Action -> Model -> Html
 view address model =
-  div [ class "container" ]
-  [ table [ class "table" ]
+  table [ class "table" ]
     [ tbody []
-      (Array.indexedMap (row address) model |> Array.toList)
+      (List.append
+        [header model]
+        (Array.indexedMap (row address) model |> Array.toList))
     ]
-  ]
 
 
 model : Model
 model = Array.fromList
-  [ Array.fromList [Left 1, Left 2]
-  , Array.fromList [Left 1, Left 2]
+  [ Array.fromList (List.repeat 50 (Left 1))
+  , Array.fromList (List.repeat 50 (Left 2))
   ]
 
 main : Signal Html

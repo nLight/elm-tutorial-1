@@ -12331,6 +12331,7 @@ Elm.Spreadsheet.make = function (_elm) {
    $moduleName = "Spreadsheet",
    $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Char = Elm.Char.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
@@ -12338,15 +12339,56 @@ Elm.Spreadsheet.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
-   var extract = function (m) {
+   $StartApp$Simple = Elm.StartApp.Simple.make(_elm),
+   $String = Elm.String.make(_elm);
+   var toLiteral$ = F2(function (acc,
+   i) {
+      return function () {
+         switch (i)
+         {case 0: return acc;}
+         return function () {
+            var modulo = A2($Basics._op["%"],
+            i - 1,
+            26);
+            var name = A2($Basics._op["++"],
+            $String.fromChar($Char.fromCode(65 + modulo)),
+            acc);
+            var i$ = (i - modulo) / 26 | 0;
+            return A2(toLiteral$,name,i$);
+         }();
+      }();
+   });
+   var toLiteral = function (i) {
+      return A2(toLiteral$,"",i);
+   };
+   var header = function (model) {
+      return function () {
+         var r = A2($Maybe.withDefault,
+         $Array.empty,
+         A2($Array.get,0,model));
+         return A2($Html.tr,
+         _L.fromArray([]),
+         A2($List._op["::"],
+         A2($Html.td,
+         _L.fromArray([]),
+         _L.fromArray([])),
+         $Array.toList(A2($Array.indexedMap,
+         F2(function (i,a) {
+            return A2($Html.th,
+            _L.fromArray([]),
+            _L.fromArray([$Html.text(toLiteral(i + 1))]));
+         }),
+         r))));
+      }();
+   };
+   var extractValue = function (m) {
       return function () {
          switch (m.ctor)
          {case "Left":
             return $Basics.toString(m._0);
             case "Right": return m._0;}
          _U.badCase($moduleName,
-         "between lines 38 and 40");
+         "between lines 40 and 42");
       }();
    };
    var UpdateCell = F3(function (a,
@@ -12364,7 +12406,7 @@ Elm.Spreadsheet.make = function (_elm) {
       return A2($Html.td,
       _L.fromArray([]),
       _L.fromArray([A2($Html.input,
-      _L.fromArray([$Html$Attributes.value(extract(data))
+      _L.fromArray([$Html$Attributes.value(extractValue(data))
                    ,A3($Html$Events.on,
                    "input",
                    $Html$Events.targetValue,
@@ -12380,21 +12422,25 @@ Elm.Spreadsheet.make = function (_elm) {
    data) {
       return A2($Html.tr,
       _L.fromArray([]),
+      A2($List._op["::"],
+      A2($Html.th,
+      _L.fromArray([]),
+      _L.fromArray([$Html.text($Basics.toString(i + 1))])),
       $Array.toList(A2($Array.indexedMap,
       A2(cell,address,i),
-      data)));
+      data))));
    });
    var view = F2(function (address,
    model) {
-      return A2($Html.div,
-      _L.fromArray([$Html$Attributes.$class("container")]),
-      _L.fromArray([A2($Html.table,
+      return A2($Html.table,
       _L.fromArray([$Html$Attributes.$class("table")]),
       _L.fromArray([A2($Html.tbody,
       _L.fromArray([]),
+      A2($List.append,
+      _L.fromArray([header(model)]),
       $Array.toList(A2($Array.indexedMap,
       row(address),
-      model)))]))]));
+      model))))]));
    });
    var NoOp = {ctor: "NoOp"};
    var Right = function (a) {
@@ -12420,16 +12466,18 @@ Elm.Spreadsheet.make = function (_elm) {
                  model);
               }();}
          _U.badCase($moduleName,
-         "between lines 26 and 33");
+         "between lines 28 and 35");
       }();
    });
    var Left = function (a) {
       return {ctor: "Left",_0: a};
    };
-   var model = $Array.fromList(_L.fromArray([$Array.fromList(_L.fromArray([Left(1)
-                                                                          ,Left(2)]))
-                                            ,$Array.fromList(_L.fromArray([Left(1)
-                                                                          ,Left(2)]))]));
+   var model = $Array.fromList(_L.fromArray([$Array.fromList(A2($List.repeat,
+                                            50,
+                                            Left(1)))
+                                            ,$Array.fromList(A2($List.repeat,
+                                            50,
+                                            Left(2)))]));
    var main = $StartApp$Simple.start({_: {}
                                      ,model: model
                                      ,update: update
@@ -12440,9 +12488,12 @@ Elm.Spreadsheet.make = function (_elm) {
                              ,NoOp: NoOp
                              ,UpdateCell: UpdateCell
                              ,update: update
-                             ,extract: extract
+                             ,extractValue: extractValue
                              ,cell: cell
                              ,row: row
+                             ,toLiteral: toLiteral
+                             ,toLiteral$: toLiteral$
+                             ,header: header
                              ,view: view
                              ,model: model
                              ,main: main};
