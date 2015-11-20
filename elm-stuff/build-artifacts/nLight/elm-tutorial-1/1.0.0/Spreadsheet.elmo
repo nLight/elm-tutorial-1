@@ -68,7 +68,7 @@ Elm.Spreadsheet.make = function (_elm) {
             return $Basics.toString(m._0);
             case "Right": return m._0;}
          _U.badCase($moduleName,
-         "between lines 40 and 42");
+         "between lines 39 and 129");
       }();
    };
    var UpdateCell = F3(function (a,
@@ -146,7 +146,7 @@ Elm.Spreadsheet.make = function (_elm) {
                  model);
               }();}
          _U.badCase($moduleName,
-         "between lines 28 and 35");
+         "between lines 27 and 34");
       }();
    });
    var Left = function (a) {

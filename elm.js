@@ -12388,7 +12388,7 @@ Elm.Spreadsheet.make = function (_elm) {
             return $Basics.toString(m._0);
             case "Right": return m._0;}
          _U.badCase($moduleName,
-         "between lines 40 and 42");
+         "between lines 39 and 41");
       }();
    };
    var UpdateCell = F3(function (a,
@@ -12398,6 +12398,27 @@ Elm.Spreadsheet.make = function (_elm) {
              ,_0: a
              ,_1: b
              ,_2: c};
+   });
+   var saa = F4(function (address,
+   i,
+   j,
+   val) {
+      return $Signal.message(A2(address,
+      UpdateCell,
+      A2(i,j,val)));
+   });
+   var saa1 = F4(function (address,
+   i,
+   j,
+   x) {
+      return function ($) {
+         return $Signal.message(address)(A2(UpdateCell,
+         i,
+         j)($));
+      }(x);
+   });
+   var a = F3(function (i,j,v) {
+      return A3(UpdateCell,i,j,v);
    });
    var cell = F4(function (address,
    i,
@@ -12410,10 +12431,10 @@ Elm.Spreadsheet.make = function (_elm) {
                    ,A3($Html$Events.on,
                    "input",
                    $Html$Events.targetValue,
-                   function ($) {
-                      return $Signal.message(address)(A2(UpdateCell,
-                      i,
-                      j)($));
+                   function (val) {
+                      return A2($Signal.message,
+                      address,
+                      A3(UpdateCell,i,j,val));
                    })]),
       _L.fromArray([]))]));
    });
@@ -12466,7 +12487,7 @@ Elm.Spreadsheet.make = function (_elm) {
                  model);
               }();}
          _U.badCase($moduleName,
-         "between lines 28 and 35");
+         "between lines 27 and 34");
       }();
    });
    var Left = function (a) {
@@ -12489,6 +12510,9 @@ Elm.Spreadsheet.make = function (_elm) {
                              ,UpdateCell: UpdateCell
                              ,update: update
                              ,extractValue: extractValue
+                             ,saa: saa
+                             ,saa1: saa1
+                             ,a: a
                              ,cell: cell
                              ,row: row
                              ,toLiteral: toLiteral

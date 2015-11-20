@@ -13,14 +13,39 @@ Elm.Repl.make = function (_elm) {
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $String = Elm.String.make(_elm);
+   $Signal = Elm.Signal.make(_elm);
    var tsol = {ctor: "_Tuple0"};
-   var deltron3030 = function (s$) {
-      return $Result.toMaybe($String.toInt(s$));
+   var sub = F2(function (x,y) {
+      return x - y;
+   });
+   var d = 1;
+   var addX = function (x) {
+      return F2(function (x,y) {
+         return x + y;
+      })(x);
    };
+   var addOne = F2(function (x,y) {
+      return x + y;
+   })(1);
+   var addOneX = function (x) {
+      return function ($) {
+         return addOne(addX(x)($));
+      };
+   };
+   var deltron3030 = A2(addOneX,
+   1,
+   2);
+   var add = F2(function (x,y) {
+      return x + y;
+   });
    _elm.Repl.values = {_op: _op
+                      ,add: add
+                      ,addOne: addOne
+                      ,addOneX: addOneX
+                      ,addX: addX
+                      ,d: d
                       ,deltron3030: deltron3030
+                      ,sub: sub
                       ,tsol: tsol};
    return _elm.Repl.values;
 };
