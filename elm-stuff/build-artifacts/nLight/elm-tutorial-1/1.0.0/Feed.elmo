@@ -1,0 +1,86 @@
+Elm.Feed = Elm.Feed || {};
+Elm.Feed.make = function (_elm) {
+   "use strict";
+   _elm.Feed = _elm.Feed || {};
+   if (_elm.Feed.values)
+   return _elm.Feed.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Feed",
+   $Basics = Elm.Basics.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
+   var update = F2(function (action,
+   model) {
+      return function () {
+         switch (action.ctor)
+         {case "NoOp": return model;}
+         _U.badCase($moduleName,
+         "between lines 60 and 61");
+      }();
+   });
+   var model = {_: {}
+               ,news: _L.fromArray([{_: {}
+                                    ,description: "Let\'s start small"
+                                    ,id: 1
+                                    ,title: "Learn Elm by example"}
+                                   ,{_: {}
+                                    ,description: "\n            Today\'s programming languages have traditionally been created by the tech giants.\n            These languages are made up of millions of lines of code, so the tech giants only invest in incremental,\n            non-breaking changes that address their business concerns.\n            This is why innovation in popular languages like C, Java, and JavaScript is depressingly slow.\n          "
+                                    ,id: 2
+                                    ,title: "Why I designed a front-end programming language from scratch"}])};
+   var item = F2(function (address,
+   item) {
+      return A2($Html.div,
+      _L.fromArray([]),
+      _L.fromArray([A2($Html.h2,
+                   _L.fromArray([]),
+                   _L.fromArray([$Html.text(item.title)]))
+                   ,A2($Html.div,
+                   _L.fromArray([]),
+                   _L.fromArray([$Html.text(item.description)]))]));
+   });
+   var feed = F2(function (address,
+   news) {
+      return A2($List.map,
+      item(address),
+      news);
+   });
+   var view = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([$Html$Attributes.$class("container")]),
+      A2(feed,address,model.news));
+   });
+   var main = $StartApp$Simple.start({_: {}
+                                     ,model: model
+                                     ,update: update
+                                     ,view: view});
+   var NoOp = {ctor: "NoOp"};
+   var Item = F3(function (a,b,c) {
+      return {_: {}
+             ,description: b
+             ,id: c
+             ,title: a};
+   });
+   var Model = function (a) {
+      return {_: {},news: a};
+   };
+   _elm.Feed.values = {_op: _op
+                      ,Model: Model
+                      ,Item: Item
+                      ,NoOp: NoOp
+                      ,item: item
+                      ,feed: feed
+                      ,view: view
+                      ,model: model
+                      ,update: update
+                      ,main: main};
+   return _elm.Feed.values;
+};

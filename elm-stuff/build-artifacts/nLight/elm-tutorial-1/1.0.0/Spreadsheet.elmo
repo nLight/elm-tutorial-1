@@ -1,0 +1,81 @@
+Elm.Spreadsheet = Elm.Spreadsheet || {};
+Elm.Spreadsheet.make = function (_elm) {
+   "use strict";
+   _elm.Spreadsheet = _elm.Spreadsheet || {};
+   if (_elm.Spreadsheet.values)
+   return _elm.Spreadsheet.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Spreadsheet",
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Html = Elm.Html.make(_elm),
+   $Html$Attributes = Elm.Html.Attributes.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $StartApp$Simple = Elm.StartApp.Simple.make(_elm);
+   var model = $Array.fromList(_L.fromArray([$Array.fromList(_L.fromArray([1
+                                                                          ,2
+                                                                          ,3
+                                                                          ,4]))
+                                            ,$Array.fromList(_L.fromArray([1
+                                                                          ,2
+                                                                          ,3
+                                                                          ,4]))]));
+   var cell = F4(function (address,
+   i,
+   j,
+   data) {
+      return A2($Html.td,
+      _L.fromArray([]),
+      _L.fromArray([$Html.text($Basics.toString(data))]));
+   });
+   var row = F3(function (address,
+   i,
+   data) {
+      return A2($Html.tr,
+      _L.fromArray([]),
+      $Array.toList(A2($Array.indexedMap,
+      A2(cell,address,i),
+      data)));
+   });
+   var view = F2(function (address,
+   model) {
+      return A2($Html.div,
+      _L.fromArray([$Html$Attributes.$class("container")]),
+      _L.fromArray([A2($Html.table,
+      _L.fromArray([$Html$Attributes.$class("table")]),
+      _L.fromArray([A2($Html.tbody,
+      _L.fromArray([]),
+      $Array.toList(A2($Array.indexedMap,
+      row(address),
+      model)))]))]));
+   });
+   var update = F2(function (action,
+   model) {
+      return function () {
+         switch (action.ctor)
+         {case "NoOp": return model;}
+         _U.badCase($moduleName,
+         "between lines 17 and 18");
+      }();
+   });
+   var main = $StartApp$Simple.start({_: {}
+                                     ,model: model
+                                     ,update: update
+                                     ,view: view});
+   var NoOp = {ctor: "NoOp"};
+   _elm.Spreadsheet.values = {_op: _op
+                             ,NoOp: NoOp
+                             ,update: update
+                             ,cell: cell
+                             ,row: row
+                             ,view: view
+                             ,model: model
+                             ,main: main};
+   return _elm.Spreadsheet.values;
+};

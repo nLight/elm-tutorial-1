@@ -1,0 +1,82 @@
+Elm.Formula = Elm.Formula || {};
+Elm.Formula.make = function (_elm) {
+   "use strict";
+   _elm.Formula = _elm.Formula || {};
+   if (_elm.Formula.values)
+   return _elm.Formula.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Formula",
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Regex = Elm.Regex.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $String = Elm.String.make(_elm);
+   var match = F2(function (rx,
+   str) {
+      return function () {
+         var matches = A3($Regex.find,
+         $Regex.AtMost(1),
+         $Regex.regex(rx),
+         str);
+         return $List.isEmpty(matches) ? $Maybe.Nothing : $List.head(matches);
+      }();
+   });
+   var mul = F2(function (formula,
+   model) {
+      return $Maybe.Just("");
+   });
+   var sumCol = F2(function (i,
+   model) {
+      return $Maybe.Just("");
+   });
+   var sum = F2(function (formula,
+   model) {
+      return A2($Maybe.andThen,
+      A2($Maybe.andThen,
+      A2($Maybe.andThen,
+      A2($Maybe.andThen,
+      A2(match,
+      "=sum\\((\\d+)\\)",
+      formula),
+      function (m) {
+         return $List.head(m.submatches);
+      }),
+      function (s) {
+         return s;
+      }),
+      function (s$$) {
+         return $Result.toMaybe($String.toInt(s$$));
+      }),
+      function (i) {
+         return A2(sumCol,i,model);
+      });
+   });
+   var $eval = F2(function (formula,
+   model) {
+      return A2($String.startsWith,
+      "=sum",
+      formula) ? A2($Maybe.withDefault,
+      "",
+      A2(sum,
+      formula,
+      model)) : A2($String.startsWith,
+      "=mul",
+      formula) ? A2($Maybe.withDefault,
+      "",
+      A2(mul,
+      formula,
+      model)) : formula;
+   });
+   _elm.Formula.values = {_op: _op
+                         ,sum: sum
+                         ,sumCol: sumCol
+                         ,mul: mul
+                         ,$eval: $eval
+                         ,match: match};
+   return _elm.Formula.values;
+};
