@@ -1,12 +1,13 @@
 module Spreadsheet where
 import Html exposing (..)
 import Html.Attributes exposing (id, class, value)
-import Html.Events exposing (on, targetValue)
+import Html.Events exposing (on, onFocus, onBlur, targetValue)
 import StartApp.Simple exposing (start)
 import Array exposing (Array)
 import Maybe exposing (withDefault)
 import Char
 import String
+import Regex exposing (..)
 
 
 type Either a b
@@ -15,30 +16,104 @@ type Either a b
 
 type alias CellModel = Either Float String
 type alias RowModel = Array CellModel
-type alias Model = Array RowModel
+type alias Model = {
+  values: Array RowModel,
+  focused: (Int, Int)
+}
 
 type Action
   = NoOp
   | UpdateCell Int Int String
+  | Focus Int Int
+  | Blur Int Int
 
 
 update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp -> model
+    NoOp ->
+      model
+      
+    Focus i j ->
+      {model | focused = (i, j)}
+
+    Blur i j ->
+      {model | focused = (-1, -1)}
+
     UpdateCell i j val ->
       let
-        r  = withDefault Array.empty (Array.get i model)
-        r' = Array.set j (Right val) r
+        row  = withDefault Array.empty <| Array.get i model.values
+        row' = Array.set j (Right val) row
+        values = Array.set i row' model.values
       in
-        Array.set i r' model
-
-
-extractValue : CellModel -> String
-extractValue m =
+        {model | values = values}
+{-
+  Т.к. значение ячейки - это Either, нам нужно его правильно распаковать
+  Если в ячейке число - преобразуем его в строку
+  Если там строка - попробуем вычислить формулу, иначе вернем саму строку
+-}
+extractValue : Model -> Int -> Int -> CellModel -> String
+extractValue model i j m =
   case m of
     Left a -> toString a
-    Right b -> b
+    Right b ->
+      case Regex.contains (Regex.regex "^=") b of
+        True ->
+          case model.focused of
+            (i', j') ->
+              if (i == i') && (j == j') then b else extractValue model i j (evalFormula model b)
+        False -> b
+
+{-
+  Вычисление формулы
+  Ищем максимум одно совпадение и вычисляем формулу, если совпадение найдено
+-}
+evalFormula : Model -> String -> CellModel
+evalFormula model formula =
+  let
+    matches = find (AtMost 1) (regex "=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)") formula
+  in
+    case matches of
+      [match] -> evalMatch model match
+      _ -> Right formula
+
+{-
+  match представляет из себя List Maybe String
+  нужно преобразовать индексы ячеек в Int
+  и по индексам достать значения из ячеек
+-}
+evalMatch : Model -> Match -> CellModel
+evalMatch model match =
+  case match.submatches of
+    [Just op, Just i1, Just j1, Just i2, Just j2] ->
+      let
+        i1' = Result.withDefault 0 (String.toInt i1)
+        j1' = Result.withDefault 0 (String.toInt j1)
+        i2' = Result.withDefault 0 (String.toInt i2)
+        j2' = Result.withDefault 0 (String.toInt j2)
+        cell1 = getCellVal model i1' j1'
+        cell2 = getCellVal model i2' j2'
+      in
+        case [cell1, cell2] of
+          [Left c1, Left c2] -> Left (applyOp op c1 c2)
+          _ -> Right (toString [cell1 , cell2])
+    _ -> Right "#Error#"
+
+
+applyOp : String -> Float -> Float -> Float
+applyOp op c1 c2 =
+  case op of
+    "sum" -> c1 + c2
+    "mul" -> c1 * c2
+    "div" -> c1 / c2
+    _ -> 0
+
+getCellVal : Model -> Int -> Int -> CellModel
+getCellVal model i j =
+  let
+    r  = withDefault Array.empty <| Array.get i model.values
+  in
+    withDefault (Right "") <| Array.get j r
 
 {-
   Разберем обработчик события
@@ -128,20 +203,22 @@ extractValue m =
 
 -}
 
-cell : Signal.Address Action -> Int -> Int -> CellModel -> Html
-cell address i j data =
+cell : Model -> Signal.Address Action -> Int -> Int -> CellModel -> Html
+cell model address i j cellVal =
   td []
   [ input
-    [ value (extractValue data)
+    [ value (extractValue model i j cellVal)
     , on "input" targetValue (Signal.message address << UpdateCell i j)
+    , onFocus address (Focus i j)
+    , onBlur address (Blur i j)
     ] []
   ]
 
 
-row : Signal.Address Action -> Int -> RowModel -> Html
-row address i data =
+row : Model -> Signal.Address Action -> Int -> RowModel -> Html
+row model address i rowData =
   tr []
-  (th [] [ text (toString (i + 1)) ] :: (Array.indexedMap (cell address i) data |> Array.toList))
+  (th [] [ text (toString (i + 1)) ] :: (Array.indexedMap (cell model address i) rowData |> Array.toList))
 
 
 toLiteral : Int -> String
@@ -165,7 +242,7 @@ toLiteral' acc i =
 header : Model -> Html
 header model =
   let
-    r = withDefault Array.empty (Array.get 0 model)
+    r = withDefault Array.empty (Array.get 0 model.values)
   in
     tr []
     (td [][] :: ((Array.indexedMap (\i a -> th [] [text (toLiteral (i+1))]) r) |> Array.toList))
@@ -177,15 +254,16 @@ view address model =
     [ tbody []
       (List.append
         [header model]
-        (Array.indexedMap (row address) model |> Array.toList))
+        (Array.indexedMap (row model address) model.values |> Array.toList))
     ]
 
 
 model : Model
-model = Array.fromList
-  [ Array.fromList (List.repeat 50 (Left 1))
-  , Array.fromList (List.repeat 50 (Left 2))
-  ]
+model =
+  {
+    values = (Array.fromList [Array.fromList (List.repeat 50 (Left 1)), Array.fromList (List.repeat 50 (Left 2))])
+  , focused = (-1, -1)
+  }
 
 main : Signal Html
 main = start { model = model , update = update , view = view }

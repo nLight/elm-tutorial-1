@@ -8966,6 +8966,169 @@ Elm.Json.Decode.make = function (_elm) {
                                     ,value: value
                                     ,customDecoder: customDecoder};
 };
+Elm.Native.Regex = {};
+Elm.Native.Regex.make = function(localRuntime) {
+	localRuntime.Native = localRuntime.Native || {};
+	localRuntime.Native.Regex = localRuntime.Native.Regex || {};
+	if (localRuntime.Native.Regex.values)
+	{
+		return localRuntime.Native.Regex.values;
+	}
+	if ('values' in Elm.Native.Regex)
+	{
+		return localRuntime.Native.Regex.values = Elm.Native.Regex.values;
+	}
+
+	var List = Elm.Native.List.make(localRuntime);
+	var Maybe = Elm.Maybe.make(localRuntime);
+
+	function escape(str)
+	{
+		return str.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+	}
+	function caseInsensitive(re)
+	{
+		return new RegExp(re.source, 'gi');
+	}
+	function regex(raw)
+	{
+		return new RegExp(raw, 'g');
+	}
+
+	function contains(re, string)
+	{
+		return string.match(re) !== null;
+	}
+
+	function find(n, re, str)
+	{
+		n = n.ctor === 'All' ? Infinity : n._0;
+		var out = [];
+		var number = 0;
+		var string = str;
+		var lastIndex = re.lastIndex;
+		var prevLastIndex = -1;
+		var result;
+		while (number++ < n && (result = re.exec(string)))
+		{
+			if (prevLastIndex === re.lastIndex) break;
+			var i = result.length - 1;
+			var subs = new Array(i);
+			while (i > 0)
+			{
+				var submatch = result[i];
+				subs[--i] = submatch === undefined
+					? Maybe.Nothing
+					: Maybe.Just(submatch);
+			}
+			out.push({
+				match: result[0],
+				submatches: List.fromArray(subs),
+				index: result.index,
+				number: number
+			});
+			prevLastIndex = re.lastIndex;
+		}
+		re.lastIndex = lastIndex;
+		return List.fromArray(out);
+	}
+
+	function replace(n, re, replacer, string)
+	{
+		n = n.ctor === 'All' ? Infinity : n._0;
+		var count = 0;
+		function jsReplacer(match)
+		{
+			if (count++ >= n)
+			{
+				return match;
+			}
+			var i = arguments.length - 3;
+			var submatches = new Array(i);
+			while (i > 0)
+			{
+				var submatch = arguments[i];
+				submatches[--i] = submatch === undefined
+					? Maybe.Nothing
+					: Maybe.Just(submatch);
+			}
+			return replacer({
+				match: match,
+				submatches: List.fromArray(submatches),
+				index: arguments[i - 1],
+				number: count
+			});
+		}
+		return string.replace(re, jsReplacer);
+	}
+
+	function split(n, re, str)
+	{
+		n = n.ctor === 'All' ? Infinity : n._0;
+		if (n === Infinity)
+		{
+			return List.fromArray(str.split(re));
+		}
+		var string = str;
+		var result;
+		var out = [];
+		var start = re.lastIndex;
+		while (n--)
+		{
+			if (!(result = re.exec(string))) break;
+			out.push(string.slice(start, result.index));
+			start = re.lastIndex;
+		}
+		out.push(string.slice(start));
+		return List.fromArray(out);
+	}
+
+	return Elm.Native.Regex.values = {
+		regex: regex,
+		caseInsensitive: caseInsensitive,
+		escape: escape,
+
+		contains: F2(contains),
+		find: F3(find),
+		replace: F4(replace),
+		split: F3(split)
+	};
+};
+
+Elm.Regex = Elm.Regex || {};
+Elm.Regex.make = function (_elm) {
+   "use strict";
+   _elm.Regex = _elm.Regex || {};
+   if (_elm.Regex.values) return _elm.Regex.values;
+   var _U = Elm.Native.Utils.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Native$Regex = Elm.Native.Regex.make(_elm);
+   var _op = {};
+   var split = $Native$Regex.split;
+   var replace = $Native$Regex.replace;
+   var find = $Native$Regex.find;
+   var AtMost = function (a) {    return {ctor: "AtMost",_0: a};};
+   var All = {ctor: "All"};
+   var Match = F4(function (a,b,c,d) {
+      return {match: a,submatches: b,index: c,number: d};
+   });
+   var contains = $Native$Regex.contains;
+   var caseInsensitive = $Native$Regex.caseInsensitive;
+   var regex = $Native$Regex.regex;
+   var escape = $Native$Regex.escape;
+   var Regex = {ctor: "Regex"};
+   return _elm.Regex.values = {_op: _op
+                              ,regex: regex
+                              ,escape: escape
+                              ,caseInsensitive: caseInsensitive
+                              ,contains: contains
+                              ,find: find
+                              ,replace: replace
+                              ,split: split
+                              ,Match: Match
+                              ,All: All
+                              ,AtMost: AtMost};
+};
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 
 },{}],2:[function(require,module,exports){
@@ -11418,6 +11581,7 @@ Elm.Spreadsheet.make = function (_elm) {
    $Html$Events = Elm.Html.Events.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
+   $Regex = Elm.Regex.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $StartApp$Simple = Elm.StartApp.Simple.make(_elm),
@@ -11445,7 +11609,7 @@ Elm.Spreadsheet.make = function (_elm) {
    var header = function (model) {
       var r = A2($Maybe.withDefault,
       $Array.empty,
-      A2($Array.get,0,model));
+      A2($Array.get,0,model.values));
       return A2($Html.tr,
       _U.list([]),
       A2($List._op["::"],
@@ -11458,38 +11622,146 @@ Elm.Spreadsheet.make = function (_elm) {
       }),
       r))));
    };
-   var extractValue = function (m) {
-      var _p1 = m;
-      if (_p1.ctor === "Left") {
-            return $Basics.toString(_p1._0);
-         } else {
-            return _p1._0;
-         }
-   };
+   var applyOp = F3(function (op,c1,c2) {
+      var _p1 = op;
+      switch (_p1)
+      {case "sum": return c1 + c2;
+         case "mul": return c1 * c2;
+         case "div": return c1 / c2;
+         default: return 0;}
+   });
+   var Blur = F2(function (a,b) {
+      return {ctor: "Blur",_0: a,_1: b};
+   });
+   var Focus = F2(function (a,b) {
+      return {ctor: "Focus",_0: a,_1: b};
+   });
    var UpdateCell = F3(function (a,b,c) {
       return {ctor: "UpdateCell",_0: a,_1: b,_2: c};
    });
-   var cell = F4(function (address,i,j,data) {
+   var NoOp = {ctor: "NoOp"};
+   var Model = F2(function (a,b) {
+      return {values: a,focused: b};
+   });
+   var Right = function (a) {    return {ctor: "Right",_0: a};};
+   var update = F2(function (action,model) {
+      var _p2 = action;
+      switch (_p2.ctor)
+      {case "NoOp": return model;
+         case "Focus": return _U.update(model,
+           {focused: {ctor: "_Tuple2",_0: _p2._0,_1: _p2._1}});
+         case "Blur": return _U.update(model,
+           {focused: {ctor: "_Tuple2",_0: -1,_1: -1}});
+         default: var _p3 = _p2._0;
+           var r = A2($Maybe.withDefault,
+           $Array.empty,
+           A2($Array.get,_p3,model.values));
+           var r$ = A3($Array.set,_p2._1,Right(_p2._2),r);
+           var r$$ = A3($Array.set,_p3,r$,model.values);
+           return _U.update(model,{values: r$$});}
+   });
+   var getCellVal = F3(function (model,i,j) {
+      var r = A2($Maybe.withDefault,
+      $Array.empty,
+      A2($Array.get,i,model.values));
+      return A2($Maybe.withDefault,Right(""),A2($Array.get,j,r));
+   });
+   var Left = function (a) {    return {ctor: "Left",_0: a};};
+   var evalMatch = F2(function (model,match) {
+      var _p4 = match.submatches;
+      if (_p4.ctor === "::" && _p4._0.ctor === "Just" && _p4._1.ctor === "::" && _p4._1._0.ctor === "Just" && _p4._1._1.ctor === "::" && _p4._1._1._0.ctor === "Just" && _p4._1._1._1.ctor === "::" && _p4._1._1._1._0.ctor === "Just" && _p4._1._1._1._1.ctor === "::" && _p4._1._1._1._1._0.ctor === "Just" && _p4._1._1._1._1._1.ctor === "[]")
+      {
+            var j2$ = A2($Result.withDefault,
+            0,
+            $String.toInt(_p4._1._1._1._1._0._0));
+            var i2$ = A2($Result.withDefault,
+            0,
+            $String.toInt(_p4._1._1._1._0._0));
+            var cell2 = A3(getCellVal,model,i2$,j2$);
+            var j1$ = A2($Result.withDefault,
+            0,
+            $String.toInt(_p4._1._1._0._0));
+            var i1$ = A2($Result.withDefault,0,$String.toInt(_p4._1._0._0));
+            var cell1 = A3(getCellVal,model,i1$,j1$);
+            var _p5 = _U.list([cell1,cell2]);
+            if (_p5.ctor === "::" && _p5._0.ctor === "Left" && _p5._1.ctor === "::" && _p5._1._0.ctor === "Left" && _p5._1._1.ctor === "[]")
+            {
+                  return Left(A3(applyOp,_p4._0._0,_p5._0._0,_p5._1._0._0));
+               } else {
+                  return Right($Basics.toString(_U.list([cell1,cell2])));
+               }
+         } else {
+            return Right("#Error#");
+         }
+   });
+   var evalFormula = F2(function (model,formula) {
+      var matches = A3($Regex.find,
+      $Regex.AtMost(1),
+      $Regex.regex("=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)"),
+      formula);
+      var _p6 = matches;
+      if (_p6.ctor === "::" && _p6._1.ctor === "[]") {
+            return A2(evalMatch,model,_p6._0);
+         } else {
+            return Right(formula);
+         }
+   });
+   var extractValue = F4(function (model,i,j,m) {
+      extractValue: while (true) {
+         var _p7 = m;
+         if (_p7.ctor === "Left") {
+               return $Basics.toString(_p7._0);
+            } else {
+               var _p10 = _p7._0;
+               var _p8 = A2($Regex.contains,$Regex.regex("^="),_p10);
+               if (_p8 === true) {
+                     var _p9 = model.focused;
+                     if (_U.eq(i,_p9._0) && _U.eq(j,_p9._1)) return _p10; else {
+                           var _v11 = model,
+                           _v12 = i,
+                           _v13 = j,
+                           _v14 = A2(evalFormula,model,_p10);
+                           model = _v11;
+                           i = _v12;
+                           j = _v13;
+                           m = _v14;
+                           continue extractValue;
+                        }
+                  } else {
+                     return _p10;
+                  }
+            }
+      }
+   });
+   var cell = F5(function (model,address,i,j,cellVal) {
       return A2($Html.td,
       _U.list([]),
       _U.list([A2($Html.input,
-      _U.list([$Html$Attributes.value(extractValue(data))
+      _U.list([$Html$Attributes.value(A4(extractValue,
+              model,
+              i,
+              j,
+              cellVal))
               ,A3($Html$Events.on,
               "input",
               $Html$Events.targetValue,
-              function (_p2) {
-                 return A2($Signal.message,address,A3(UpdateCell,i,j,_p2));
-              })]),
+              function (_p11) {
+                 return A2($Signal.message,address,A3(UpdateCell,i,j,_p11));
+              })
+              ,A2($Html$Events.onFocus,address,A2(Focus,i,j))
+              ,A2($Html$Events.onBlur,address,A2(Blur,i,j))]),
       _U.list([]))]));
    });
-   var row = F3(function (address,i,data) {
+   var row = F4(function (model,address,i,rowData) {
       return A2($Html.tr,
       _U.list([]),
       A2($List._op["::"],
       A2($Html.th,
       _U.list([]),
       _U.list([$Html.text($Basics.toString(i + 1))])),
-      $Array.toList(A2($Array.indexedMap,A2(cell,address,i),data))));
+      $Array.toList(A2($Array.indexedMap,
+      A3(cell,model,address,i),
+      rowData))));
    });
    var view = F2(function (address,model) {
       return A2($Html.table,
@@ -11498,38 +11770,32 @@ Elm.Spreadsheet.make = function (_elm) {
       _U.list([]),
       A2($List.append,
       _U.list([header(model)]),
-      $Array.toList(A2($Array.indexedMap,row(address),model))))]));
+      $Array.toList(A2($Array.indexedMap,
+      A2(row,model,address),
+      model.values))))]));
    });
-   var NoOp = {ctor: "NoOp"};
-   var Right = function (a) {    return {ctor: "Right",_0: a};};
-   var update = F2(function (action,model) {
-      var _p3 = action;
-      if (_p3.ctor === "NoOp") {
-            return model;
-         } else {
-            var _p4 = _p3._0;
-            var r = A2($Maybe.withDefault,
-            $Array.empty,
-            A2($Array.get,_p4,model));
-            var r$ = A3($Array.set,_p3._1,Right(_p3._2),r);
-            return A3($Array.set,_p4,r$,model);
-         }
-   });
-   var Left = function (a) {    return {ctor: "Left",_0: a};};
-   var model = $Array.fromList(_U.list([$Array.fromList(A2($List.repeat,
-                                       50,
-                                       Left(1)))
-                                       ,$Array.fromList(A2($List.repeat,50,Left(2)))]));
+   var model = {values: $Array.fromList(_U.list([$Array.fromList(A2($List.repeat,
+                                                50,
+                                                Left(1)))
+                                                ,$Array.fromList(A2($List.repeat,50,Left(2)))]))
+               ,focused: {ctor: "_Tuple2",_0: -1,_1: -1}};
    var main = $StartApp$Simple.start({model: model
                                      ,update: update
                                      ,view: view});
    return _elm.Spreadsheet.values = {_op: _op
                                     ,Left: Left
                                     ,Right: Right
+                                    ,Model: Model
                                     ,NoOp: NoOp
                                     ,UpdateCell: UpdateCell
+                                    ,Focus: Focus
+                                    ,Blur: Blur
                                     ,update: update
                                     ,extractValue: extractValue
+                                    ,evalFormula: evalFormula
+                                    ,evalMatch: evalMatch
+                                    ,applyOp: applyOp
+                                    ,getCellVal: getCellVal
                                     ,cell: cell
                                     ,row: row
                                     ,toLiteral: toLiteral
