@@ -28,12 +28,19 @@ type Action
   | Blur Int Int
 
 
+convertValue : String -> CellModel
+convertValue val =
+  case String.toFloat val of
+    Ok v -> Left v
+    Err _ -> Right val
+
+
 update : Action -> Model -> Model
 update action model =
   case action of
     NoOp ->
       model
-      
+
     Focus i j ->
       {model | focused = (i, j)}
 
@@ -42,8 +49,9 @@ update action model =
 
     UpdateCell i j val ->
       let
+        val' = convertValue val
         row  = withDefault Array.empty <| Array.get i model.values
-        row' = Array.set j (Right val) row
+        row' = Array.set j val' row
         values = Array.set i row' model.values
       in
         {model | values = values}
