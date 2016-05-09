@@ -31,8 +31,7 @@ type alias Model =
 
 
 type Action
-  = NoOp
-  | UpdateCell Int Int String
+  = UpdateCell Int Int String
   | Focus Int Int
   | Blur Int Int
 
@@ -50,9 +49,6 @@ convertValue val =
 update : Action -> Model -> Model
 update action model =
   case action of
-    NoOp ->
-      model
-
     Focus i j ->
       { model | focused = ( i, j ) }
 
