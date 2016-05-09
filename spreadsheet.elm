@@ -42,8 +42,8 @@ type Action
 convertValue : String -> CellModel
 convertValue val =
   case String.toFloat val of
-    Ok v ->
-      Left v
+    Ok floatVal ->
+      Left floatVal
 
     Err _ ->
       Right val
