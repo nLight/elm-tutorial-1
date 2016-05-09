@@ -30,12 +30,12 @@ type alias RowModel =
 
 type alias Model =
   { values : Array RowModel
-  , focused : Coords
+  , focused : Maybe Coords
   }
 
 
 type Action
-  = UpdateCell Coords String
+  = UpdateCell (Maybe Coords) String
   | Focus Coords
 
 
@@ -53,9 +53,9 @@ update : Action -> Model -> Model
 update action model =
   case action of
     Focus coords ->
-      { model | focused = coords }
+      { model | focused = Just coords }
 
-    UpdateCell ( i, j ) val ->
+    UpdateCell (Just ( i, j )) val ->
       let
         val' =
           convertValue val
@@ -70,6 +70,9 @@ update action model =
           Array.set i row' model.values
       in
         { model | values = values }
+
+    _ ->
+      model
 
 
 
@@ -180,15 +183,17 @@ getCellVal model ( i, j ) =
 
 getFocusedValue : Model -> String
 getFocusedValue model =
-  if ( -1, -1 ) == model.focused then
-    ""
-  else
-    case getCellVal model model.focused of
-      Left val ->
-        toString val
+  case model.focused of
+    Just coords ->
+      case getCellVal model coords of
+        Left val ->
+          toString val
 
-      Right str ->
-        str
+        Right str ->
+          str
+
+    _ ->
+      ""
 
 
 
@@ -286,7 +291,7 @@ cell model address i j cellVal =
     []
     [ input
         [ value (extractValue model ( i, j ) cellVal)
-        , on "input" targetValue (Signal.message address << UpdateCell ( i, j ))
+        , on "input" targetValue (Signal.message address << UpdateCell (Just ( i, j )))
         , onFocus address (Focus ( i, j ))
         ]
         []
@@ -365,7 +370,7 @@ view address model =
 model : Model
 model =
   { values = (Array.fromList [ Array.fromList (List.repeat 50 (Left 1)), Array.fromList (List.repeat 50 (Left 2)) ])
-  , focused = ( -1, -1 )
+  , focused = Nothing
   }
 
 
