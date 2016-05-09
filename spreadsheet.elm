@@ -83,21 +83,21 @@ update action model =
 extractValue : Model -> Int -> Int -> CellModel -> String
 extractValue model i j m =
   case m of
-    Left a ->
-      toString a
+    Left value ->
+      toString value
 
-    Right b ->
-      case Regex.contains (Regex.regex "^=") b of
+    Right str ->
+      case Regex.contains (Regex.regex "^=") str of
         True ->
           case model.focused of
             ( i', j' ) ->
               if (i == i') && (j == j') then
-                b
+                str
               else
-                extractValue model i j (evalFormula model b)
+                extractValue model i j (evalFormula model str)
 
         False ->
-          b
+          str
 
 
 
