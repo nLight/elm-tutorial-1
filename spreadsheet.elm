@@ -8,6 +8,7 @@ import Array exposing (Array)
 import Maybe exposing (withDefault)
 import Char
 import String
+import Dict exposing (Dict)
 import Regex exposing (..)
 
 
@@ -24,12 +25,8 @@ type alias CellModel =
   Either Float String
 
 
-type alias RowModel =
-  Array CellModel
-
-
 type alias Model =
-  { values : Array RowModel
+  { values : Dict String CellModel
   , focused : Maybe Coords
   }
 
@@ -37,6 +34,11 @@ type alias Model =
 type Action
   = UpdateCell (Maybe Coords) String
   | Focus Coords
+
+
+defaultSize : number
+defaultSize =
+  20
 
 
 convertValue : String -> CellModel
@@ -60,14 +62,11 @@ update action model =
         val' =
           convertValue val
 
-        row =
-          withDefault Array.empty <| Array.get i model.values
-
-        row' =
-          Array.set j val' row
+        index =
+          String.join ":" [ toString i, toString j ]
 
         values =
-          Array.set i row' model.values
+          Dict.insert index val' model.values
       in
         { model | values = values }
 
@@ -83,14 +82,17 @@ update action model =
 -}
 
 
-extractValue : Model -> Coords -> CellModel -> String
+extractValue : Model -> Coords -> Maybe CellModel -> String
 extractValue model coords cellValue =
   case cellValue of
-    Left value ->
+    Just (Left value) ->
       toString value
 
-    Right str ->
+    Just (Right str) ->
       evalFormula model coords str
+
+    _ ->
+      ""
 
 
 
@@ -108,7 +110,7 @@ evalFormula model coords formula =
   in
     case matches of
       [ match ] ->
-        extractValue model coords (evalMatch model match)
+        extractValue model coords (Just (evalMatch model match))
 
       _ ->
         formula
@@ -146,7 +148,7 @@ evalMatch model match =
           getCellVal model ( (j2' - 1), (i2' - 1) )
       in
         case [ cell1, cell2 ] of
-          [ Left c1, Left c2 ] ->
+          [ Just (Left c1), Just (Left c2) ] ->
             applyOp op c1 c2
 
           _ ->
@@ -172,13 +174,21 @@ applyOp op c1 c2 =
       Right "Error! Unknown operator."
 
 
-getCellVal : Model -> Coords -> CellModel
-getCellVal model ( i, j ) =
+getIndex : Coords -> String
+getIndex coords =
   let
-    r =
-      withDefault Array.empty <| Array.get i model.values
+    i =
+      fst coords
+
+    j =
+      snd coords
   in
-    withDefault (Right "") <| Array.get j r
+    String.join ":" [ toString i, toString j ]
+
+
+getCellVal : Model -> Coords -> Maybe CellModel
+getCellVal model coords =
+  Dict.get (getIndex coords) model.values
 
 
 getFocusedValue : Model -> String
@@ -186,11 +196,14 @@ getFocusedValue model =
   case model.focused of
     Just coords ->
       case getCellVal model coords of
-        Left val ->
+        Just (Left val) ->
           toString val
 
-        Right str ->
+        Just (Right str) ->
           str
+
+        _ ->
+          ""
 
     _ ->
       ""
@@ -285,24 +298,76 @@ getFocusedValue model =
 -}
 
 
-cell : Model -> Signal.Address Action -> Int -> Int -> CellModel -> Html
-cell model address i j cellVal =
-  td
-    []
+cell : Model -> Signal.Address Action -> Coords -> Html
+cell model address coords =
+  let
+    cellVal =
+      Dict.get (getIndex coords) model.values
+  in
+    td
+      []
+      [ input
+          [ value (extractValue model coords cellVal)
+          , on "input" targetValue (Signal.message address << UpdateCell (Just coords))
+          , onFocus address (Focus coords)
+          ]
+          []
+      ]
+
+
+row : Model -> Signal.Address Action -> Int -> Html
+row model address i =
+  let
+    sizeArray =
+      Array.repeat defaultSize 0
+
+    cells =
+      Array.indexedMap (\j el -> cell model address ( i, j )) sizeArray |> Array.toList
+  in
+    tr
+      []
+      (th [] [ text (toString (i + 1)) ] :: cells)
+
+
+header : Model -> Html
+header model =
+  let
+    r =
+      Array.repeat defaultSize 0
+  in
+    tr
+      []
+      (td [] [] :: ((Array.indexedMap (\i a -> th [] [ text (toLiteral (i + 1)) ]) r) |> Array.toList))
+
+
+sheet : Signal.Address Action -> Model -> Html
+sheet address model =
+  let
+    sheetArray =
+      Array.repeat defaultSize 0
+  in
+    table
+      [ class "table" ]
+      [ tbody
+          []
+          (List.append
+            [ header model ]
+            (Array.indexedMap (\i el -> row model address i) sheetArray |> Array.toList)
+          )
+      ]
+
+
+view : Signal.Address Action -> Model -> Html
+view address model =
+  div
+    [ class "container" ]
     [ input
-        [ value (extractValue model ( i, j ) cellVal)
-        , on "input" targetValue (Signal.message address << UpdateCell (Just ( i, j )))
-        , onFocus address (Focus ( i, j ))
+        [ value (getFocusedValue model)
+        , on "input" targetValue (Signal.message address << UpdateCell model.focused)
         ]
         []
+    , sheet address model
     ]
-
-
-row : Model -> Signal.Address Action -> Int -> RowModel -> Html
-row model address i rowData =
-  tr
-    []
-    (th [] [ text (toString (i + 1)) ] :: (Array.indexedMap (cell model address i) rowData |> Array.toList))
 
 
 toLiteral : Int -> String
@@ -330,46 +395,9 @@ toLiteral' acc i =
         toLiteral' name i'
 
 
-header : Model -> Html
-header model =
-  let
-    r =
-      withDefault Array.empty (Array.get 0 model.values)
-  in
-    tr
-      []
-      (td [] [] :: ((Array.indexedMap (\i a -> th [] [ text (toLiteral (i + 1)) ]) r) |> Array.toList))
-
-
-sheet : Signal.Address Action -> Model -> Html
-sheet address model =
-  table
-    [ class "table" ]
-    [ tbody
-        []
-        (List.append
-          [ header model ]
-          (Array.indexedMap (row model address) model.values |> Array.toList)
-        )
-    ]
-
-
-view : Signal.Address Action -> Model -> Html
-view address model =
-  div
-    [ class "container" ]
-    [ input
-        [ value (getFocusedValue model)
-        , on "input" targetValue (Signal.message address << UpdateCell model.focused)
-        ]
-        []
-    , sheet address model
-    ]
-
-
 model : Model
 model =
-  { values = (Array.fromList [ Array.fromList (List.repeat 50 (Left 1)), Array.fromList (List.repeat 50 (Left 2)) ])
+  { values = Dict.fromList [ ( "1:1", (Left 1) ) ]
   , focused = Nothing
   }
 
