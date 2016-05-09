@@ -154,29 +154,29 @@ evalMatch model match =
       in
         case [ cell1, cell2 ] of
           [ Left c1, Left c2 ] ->
-            Left (applyOp op c1 c2)
+            applyOp op c1 c2
 
           _ ->
             Right (toString [ cell1, cell2 ])
 
     _ ->
-      Right "#Error#"
+      Right "Error! Wrong match."
 
 
-applyOp : String -> Float -> Float -> Float
+applyOp : String -> Float -> Float -> CellModel
 applyOp op c1 c2 =
   case op of
     "sum" ->
-      c1 + c2
+      Left (c1 + c2)
 
     "mul" ->
-      c1 * c2
+      Left (c1 * c2)
 
     "div" ->
-      c1 / c2
+      Left (c1 / c2)
 
     _ ->
-      0
+      Right "Error! Unknown operator."
 
 
 getCellVal : Model -> Int -> Int -> CellModel
