@@ -30,7 +30,7 @@ type alias RowModel =
 
 type alias Model =
   { values : Array RowModel
-  , focused : ( Int, Int )
+  , focused : Coords
   }
 
 
