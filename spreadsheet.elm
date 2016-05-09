@@ -85,8 +85,8 @@ update action model =
 
 
 extractValue : Model -> Coords -> CellModel -> String
-extractValue model coords m =
-  case m of
+extractValue model coords cellValue =
+  case cellValue of
     Left value ->
       toString value
 
