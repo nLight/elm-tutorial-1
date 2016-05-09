@@ -111,7 +111,7 @@ evalFormula : Model -> String -> CellModel
 evalFormula model formula =
   let
     matches =
-      find (AtMost 1) (regex "=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)") formula
+      find (AtMost 1) (regex "^=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)$") formula
   in
     case matches of
       [ match ] ->
