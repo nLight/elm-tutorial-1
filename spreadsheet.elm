@@ -5,7 +5,7 @@ import Html.Attributes exposing (id, class, value)
 import Html.Events exposing (on, onFocus, onBlur, targetValue)
 import StartApp.Simple exposing (start)
 import Array exposing (Array)
-import Maybe exposing (withDefault)
+import Maybe
 import Char
 import String
 import Dict exposing (Dict)
