@@ -63,7 +63,7 @@ update action model =
           convertValue val
 
         index =
-          String.join ":" [ toString i, toString j ]
+          getIndex ( i, j )
 
         values =
           Dict.insert index val' model.values
@@ -106,7 +106,7 @@ evalFormula : Model -> Coords -> String -> String
 evalFormula model coords formula =
   let
     matches =
-      find (AtMost 1) (regex "^=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)$") formula
+      find (AtMost 1) (regex "^=(sum|mul|div)\\(([A-Z]+\\d+)\\,([A-Z]+\\d+)\\)$") formula
   in
     case matches of
       [ match ] ->
@@ -127,25 +127,13 @@ match представляет из себя List Maybe String
 evalMatch : Model -> Match -> CellModel
 evalMatch model match =
   case match.submatches of
-    [ Just op, Just i1, Just j1, Just i2, Just j2 ] ->
+    [ Just op, Just index1, Just index2 ] ->
       let
-        i1' =
-          Result.withDefault 0 (String.toInt i1)
-
-        j1' =
-          Result.withDefault 0 (String.toInt j1)
-
-        i2' =
-          Result.withDefault 0 (String.toInt i2)
-
-        j2' =
-          Result.withDefault 0 (String.toInt j2)
-
         cell1 =
-          getCellVal model ( (j1' - 1), (i1' - 1) )
+          getCellValByIndex model index1
 
         cell2 =
-          getCellVal model ( (j2' - 1), (i2' - 1) )
+          getCellValByIndex model index2
       in
         case [ cell1, cell2 ] of
           [ Just (Left c1), Just (Left c2) ] ->
@@ -178,17 +166,22 @@ getIndex : Coords -> String
 getIndex coords =
   let
     i =
-      fst coords
+      fst coords + 1
 
     j =
-      snd coords
+      snd coords + 1
   in
-    String.join ":" [ toString i, toString j ]
+    String.join "" [ toLiteral j, toString i ]
 
 
 getCellVal : Model -> Coords -> Maybe CellModel
 getCellVal model coords =
-  Dict.get (getIndex coords) model.values
+  getCellValByIndex model (getIndex coords)
+
+
+getCellValByIndex : Model -> String -> Maybe CellModel
+getCellValByIndex model index =
+  Dict.get index model.values
 
 
 getFocusedValue : Model -> String
@@ -370,6 +363,11 @@ view address model =
     ]
 
 
+fromLiteral : String -> Int
+fromLiteral str =
+  String.toList str |> List.map Char.toCode |> List.foldr (+) 0
+
+
 toLiteral : Int -> String
 toLiteral i =
   toLiteral' "" i
@@ -397,7 +395,7 @@ toLiteral' acc i =
 
 model : Model
 model =
-  { values = Dict.fromList [ ( "1:1", (Left 1) ) ]
+  { values = Dict.fromList [ ( "A1", (Left 1) ), ( "B2", (Left 10) ), ( "C3", Right "=sum(A1,B2)" ) ]
   , focused = Nothing
   }
 
