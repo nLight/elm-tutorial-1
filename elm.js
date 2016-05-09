@@ -11576,6 +11576,7 @@ Elm.Spreadsheet.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Char = Elm.Char.make(_elm),
    $Debug = Elm.Debug.make(_elm),
+   $Dict = Elm.Dict.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
@@ -11606,10 +11607,45 @@ Elm.Spreadsheet.make = function (_elm) {
       }
    });
    var toLiteral = function (i) {    return A2(toLiteral$,"",i);};
+   var fromLiteral = function (str) {
+      return A3($List.foldr,
+      F2(function (x,y) {    return x + y;}),
+      0,
+      A2($List.map,$Char.toCode,$String.toList(str)));
+   };
+   var getCellValByIndex = F2(function (model,index) {
+      return A2($Dict.get,index,model.values);
+   });
+   var getIndex = function (coords) {
+      var j = $Basics.snd(coords) + 1;
+      var i = $Basics.fst(coords) + 1;
+      return A2($String.join,
+      "",
+      _U.list([toLiteral(j),$Basics.toString(i)]));
+   };
+   var getCellVal = F2(function (model,coords) {
+      return A2(getCellValByIndex,model,getIndex(coords));
+   });
+   var getFocusedValue = function (model) {
+      var _p1 = model.focused;
+      if (_p1.ctor === "Just") {
+            var _p2 = A2(getCellVal,model,_p1._0);
+            if (_p2.ctor === "Just") {
+                  if (_p2._0.ctor === "Left") {
+                        return $Basics.toString(_p2._0._0);
+                     } else {
+                        return _p2._0._0;
+                     }
+               } else {
+                  return "";
+               }
+         } else {
+            return "";
+         }
+   };
+   var defaultSize = 20;
    var header = function (model) {
-      var r = A2($Maybe.withDefault,
-      $Array.empty,
-      A2($Array.get,0,model.values));
+      var r = A2($Array.repeat,defaultSize,0);
       return A2($Html.tr,
       _U.list([]),
       A2($List._op["::"],
@@ -11622,148 +11658,129 @@ Elm.Spreadsheet.make = function (_elm) {
       }),
       r))));
    };
-   var applyOp = F3(function (op,c1,c2) {
-      var _p1 = op;
-      switch (_p1)
-      {case "sum": return c1 + c2;
-         case "mul": return c1 * c2;
-         case "div": return c1 / c2;
-         default: return 0;}
+   var Focus = function (a) {    return {ctor: "Focus",_0: a};};
+   var UpdateCell = F2(function (a,b) {
+      return {ctor: "UpdateCell",_0: a,_1: b};
    });
-   var Blur = F2(function (a,b) {
-      return {ctor: "Blur",_0: a,_1: b};
-   });
-   var Focus = F2(function (a,b) {
-      return {ctor: "Focus",_0: a,_1: b};
-   });
-   var UpdateCell = F3(function (a,b,c) {
-      return {ctor: "UpdateCell",_0: a,_1: b,_2: c};
-   });
-   var NoOp = {ctor: "NoOp"};
    var Model = F2(function (a,b) {
       return {values: a,focused: b};
    });
    var Right = function (a) {    return {ctor: "Right",_0: a};};
-   var update = F2(function (action,model) {
-      var _p2 = action;
-      switch (_p2.ctor)
-      {case "NoOp": return model;
-         case "Focus": return _U.update(model,
-           {focused: {ctor: "_Tuple2",_0: _p2._0,_1: _p2._1}});
-         case "Blur": return _U.update(model,
-           {focused: {ctor: "_Tuple2",_0: -1,_1: -1}});
-         default: var _p3 = _p2._0;
-           var r = A2($Maybe.withDefault,
-           $Array.empty,
-           A2($Array.get,_p3,model.values));
-           var r$ = A3($Array.set,_p2._1,Right(_p2._2),r);
-           var r$$ = A3($Array.set,_p3,r$,model.values);
-           return _U.update(model,{values: r$$});}
-   });
-   var getCellVal = F3(function (model,i,j) {
-      var r = A2($Maybe.withDefault,
-      $Array.empty,
-      A2($Array.get,i,model.values));
-      return A2($Maybe.withDefault,Right(""),A2($Array.get,j,r));
-   });
    var Left = function (a) {    return {ctor: "Left",_0: a};};
+   var convertValue = function (val) {
+      var _p3 = $String.toFloat(val);
+      if (_p3.ctor === "Ok") {
+            return Left(_p3._0);
+         } else {
+            return Right(val);
+         }
+   };
+   var update = F2(function (action,model) {
+      var _p4 = action;
+      if (_p4.ctor === "Focus") {
+            return _U.update(model,{focused: $Maybe.Just(_p4._0)});
+         } else {
+            if (_p4._0.ctor === "Just" && _p4._0._0.ctor === "_Tuple2") {
+                  var index = getIndex({ctor: "_Tuple2"
+                                       ,_0: _p4._0._0._0
+                                       ,_1: _p4._0._0._1});
+                  var val$ = convertValue(_p4._1);
+                  var values = A3($Dict.insert,index,val$,model.values);
+                  return _U.update(model,{values: values});
+               } else {
+                  return model;
+               }
+         }
+   });
+   var applyOp = F3(function (op,c1,c2) {
+      var _p5 = op;
+      switch (_p5)
+      {case "sum": return Left(c1 + c2);
+         case "mul": return Left(c1 * c2);
+         case "div": return Left(c1 / c2);
+         default: return Right("Error! Unknown operator.");}
+   });
    var evalMatch = F2(function (model,match) {
-      var _p4 = match.submatches;
-      if (_p4.ctor === "::" && _p4._0.ctor === "Just" && _p4._1.ctor === "::" && _p4._1._0.ctor === "Just" && _p4._1._1.ctor === "::" && _p4._1._1._0.ctor === "Just" && _p4._1._1._1.ctor === "::" && _p4._1._1._1._0.ctor === "Just" && _p4._1._1._1._1.ctor === "::" && _p4._1._1._1._1._0.ctor === "Just" && _p4._1._1._1._1._1.ctor === "[]")
+      var _p6 = match.submatches;
+      if (_p6.ctor === "::" && _p6._0.ctor === "Just" && _p6._1.ctor === "::" && _p6._1._0.ctor === "Just" && _p6._1._1.ctor === "::" && _p6._1._1._0.ctor === "Just" && _p6._1._1._1.ctor === "[]")
       {
-            var j2$ = A2($Result.withDefault,
-            0,
-            $String.toInt(_p4._1._1._1._1._0._0));
-            var i2$ = A2($Result.withDefault,
-            0,
-            $String.toInt(_p4._1._1._1._0._0));
-            var cell2 = A3(getCellVal,model,i2$,j2$);
-            var j1$ = A2($Result.withDefault,
-            0,
-            $String.toInt(_p4._1._1._0._0));
-            var i1$ = A2($Result.withDefault,0,$String.toInt(_p4._1._0._0));
-            var cell1 = A3(getCellVal,model,i1$,j1$);
-            var _p5 = _U.list([cell1,cell2]);
-            if (_p5.ctor === "::" && _p5._0.ctor === "Left" && _p5._1.ctor === "::" && _p5._1._0.ctor === "Left" && _p5._1._1.ctor === "[]")
+            var cell2 = A2(getCellValByIndex,model,_p6._1._1._0._0);
+            var cell1 = A2(getCellValByIndex,model,_p6._1._0._0);
+            var _p7 = _U.list([cell1,cell2]);
+            if (_p7.ctor === "::" && _p7._0.ctor === "Just" && _p7._0._0.ctor === "Left" && _p7._1.ctor === "::" && _p7._1._0.ctor === "Just" && _p7._1._0._0.ctor === "Left" && _p7._1._1.ctor === "[]")
             {
-                  return Left(A3(applyOp,_p4._0._0,_p5._0._0,_p5._1._0._0));
+                  return A3(applyOp,_p6._0._0,_p7._0._0._0,_p7._1._0._0._0);
                } else {
                   return Right($Basics.toString(_U.list([cell1,cell2])));
                }
          } else {
-            return Right("#Error#");
+            return Right("Error! Wrong match.");
          }
    });
-   var evalFormula = F2(function (model,formula) {
+   var evalFormula = F3(function (model,coords,formula) {
       var matches = A3($Regex.find,
       $Regex.AtMost(1),
-      $Regex.regex("=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)"),
+      $Regex.regex("^=(sum|mul|div)\\(([A-Z]+\\d+)\\,([A-Z]+\\d+)\\)$"),
       formula);
-      var _p6 = matches;
-      if (_p6.ctor === "::" && _p6._1.ctor === "[]") {
-            return A2(evalMatch,model,_p6._0);
+      var _p8 = matches;
+      if (_p8.ctor === "::" && _p8._1.ctor === "[]") {
+            return A3(extractValue,
+            model,
+            coords,
+            $Maybe.Just(A2(evalMatch,model,_p8._0)));
          } else {
-            return Right(formula);
+            return formula;
          }
    });
-   var extractValue = F4(function (model,i,j,m) {
-      extractValue: while (true) {
-         var _p7 = m;
-         if (_p7.ctor === "Left") {
-               return $Basics.toString(_p7._0);
-            } else {
-               var _p10 = _p7._0;
-               var _p8 = A2($Regex.contains,$Regex.regex("^="),_p10);
-               if (_p8 === true) {
-                     var _p9 = model.focused;
-                     if (_U.eq(i,_p9._0) && _U.eq(j,_p9._1)) return _p10; else {
-                           var _v11 = model,
-                           _v12 = i,
-                           _v13 = j,
-                           _v14 = A2(evalFormula,model,_p10);
-                           model = _v11;
-                           i = _v12;
-                           j = _v13;
-                           m = _v14;
-                           continue extractValue;
-                        }
-                  } else {
-                     return _p10;
-                  }
-            }
-      }
+   var extractValue = F3(function (model,coords,cellValue) {
+      var _p9 = cellValue;
+      if (_p9.ctor === "Just") {
+            if (_p9._0.ctor === "Left") {
+                  return $Basics.toString(_p9._0._0);
+               } else {
+                  return A3(evalFormula,model,coords,_p9._0._0);
+               }
+         } else {
+            return "";
+         }
    });
-   var cell = F5(function (model,address,i,j,cellVal) {
+   var cell = F3(function (model,address,coords) {
+      var cellVal = A2($Dict.get,getIndex(coords),model.values);
       return A2($Html.td,
       _U.list([]),
       _U.list([A2($Html.input,
-      _U.list([$Html$Attributes.value(A4(extractValue,
+      _U.list([$Html$Attributes.value(A3(extractValue,
               model,
-              i,
-              j,
+              coords,
               cellVal))
               ,A3($Html$Events.on,
               "input",
               $Html$Events.targetValue,
-              function (_p11) {
-                 return A2($Signal.message,address,A3(UpdateCell,i,j,_p11));
+              function (_p10) {
+                 return A2($Signal.message,
+                 address,
+                 A2(UpdateCell,$Maybe.Just(coords),_p10));
               })
-              ,A2($Html$Events.onFocus,address,A2(Focus,i,j))
-              ,A2($Html$Events.onBlur,address,A2(Blur,i,j))]),
+              ,A2($Html$Events.onFocus,address,Focus(coords))]),
       _U.list([]))]));
    });
-   var row = F4(function (model,address,i,rowData) {
+   var row = F3(function (model,address,i) {
+      var sizeArray = A2($Array.repeat,defaultSize,0);
+      var cells = $Array.toList(A2($Array.indexedMap,
+      F2(function (j,el) {
+         return A3(cell,model,address,{ctor: "_Tuple2",_0: i,_1: j});
+      }),
+      sizeArray));
       return A2($Html.tr,
       _U.list([]),
       A2($List._op["::"],
       A2($Html.th,
       _U.list([]),
       _U.list([$Html.text($Basics.toString(i + 1))])),
-      $Array.toList(A2($Array.indexedMap,
-      A3(cell,model,address,i),
-      rowData))));
+      cells));
    });
-   var view = F2(function (address,model) {
+   var sheet = F2(function (address,model) {
+      var sheetArray = A2($Array.repeat,defaultSize,0);
       return A2($Html.table,
       _U.list([$Html$Attributes.$class("table")]),
       _U.list([A2($Html.tbody,
@@ -11771,14 +11788,31 @@ Elm.Spreadsheet.make = function (_elm) {
       A2($List.append,
       _U.list([header(model)]),
       $Array.toList(A2($Array.indexedMap,
-      A2(row,model,address),
-      model.values))))]));
+      F2(function (i,el) {    return A3(row,model,address,i);}),
+      sheetArray))))]));
    });
-   var model = {values: $Array.fromList(_U.list([$Array.fromList(A2($List.repeat,
-                                                50,
-                                                Left(1)))
-                                                ,$Array.fromList(A2($List.repeat,50,Left(2)))]))
-               ,focused: {ctor: "_Tuple2",_0: -1,_1: -1}};
+   var view = F2(function (address,model) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class("container")]),
+      _U.list([A2($Html.input,
+              _U.list([$Html$Attributes.value(getFocusedValue(model))
+                      ,A3($Html$Events.on,
+                      "input",
+                      $Html$Events.targetValue,
+                      function (_p11) {
+                         return A2($Signal.message,
+                         address,
+                         A2(UpdateCell,model.focused,_p11));
+                      })]),
+              _U.list([]))
+              ,A2(sheet,address,model)]));
+   });
+   var model = {values: $Dict.fromList(_U.list([{ctor: "_Tuple2"
+                                                ,_0: "A1"
+                                                ,_1: Left(1)}
+                                               ,{ctor: "_Tuple2",_0: "B2",_1: Left(10)}
+                                               ,{ctor: "_Tuple2",_0: "C3",_1: Right("=sum(A1,B2)")}]))
+               ,focused: $Maybe.Nothing};
    var main = $StartApp$Simple.start({model: model
                                      ,update: update
                                      ,view: view});
@@ -11786,22 +11820,27 @@ Elm.Spreadsheet.make = function (_elm) {
                                     ,Left: Left
                                     ,Right: Right
                                     ,Model: Model
-                                    ,NoOp: NoOp
                                     ,UpdateCell: UpdateCell
                                     ,Focus: Focus
-                                    ,Blur: Blur
+                                    ,defaultSize: defaultSize
+                                    ,convertValue: convertValue
                                     ,update: update
                                     ,extractValue: extractValue
                                     ,evalFormula: evalFormula
                                     ,evalMatch: evalMatch
                                     ,applyOp: applyOp
+                                    ,getIndex: getIndex
                                     ,getCellVal: getCellVal
+                                    ,getCellValByIndex: getCellValByIndex
+                                    ,getFocusedValue: getFocusedValue
                                     ,cell: cell
                                     ,row: row
+                                    ,header: header
+                                    ,sheet: sheet
+                                    ,view: view
+                                    ,fromLiteral: fromLiteral
                                     ,toLiteral: toLiteral
                                     ,toLiteral$: toLiteral$
-                                    ,header: header
-                                    ,view: view
                                     ,model: model
                                     ,main: main};
 };
