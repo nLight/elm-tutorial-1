@@ -37,7 +37,6 @@ type alias Model =
 type Action
   = UpdateCell Coords String
   | Focus Coords
-  | Blur
 
 
 convertValue : String -> CellModel
@@ -55,9 +54,6 @@ update action model =
   case action of
     Focus coords ->
       { model | focused = coords }
-
-    Blur ->
-      { model | focused = ( -1, -1 ) }
 
     UpdateCell ( i, j ) val ->
       let
@@ -91,10 +87,7 @@ extractValue model coords cellValue =
       toString value
 
     Right str ->
-      if coords == model.focused then
-        str
-      else
-        evalFormula model coords str
+      evalFormula model coords str
 
 
 
@@ -183,6 +176,19 @@ getCellVal model ( i, j ) =
       withDefault Array.empty <| Array.get i model.values
   in
     withDefault (Right "") <| Array.get j r
+
+
+getFocusedValue : Model -> String
+getFocusedValue model =
+  if ( -1, -1 ) == model.focused then
+    ""
+  else
+    case getCellVal model model.focused of
+      Left val ->
+        toString val
+
+      Right str ->
+        str
 
 
 
@@ -282,7 +288,6 @@ cell model address i j cellVal =
         [ value (extractValue model ( i, j ) cellVal)
         , on "input" targetValue (Signal.message address << UpdateCell ( i, j ))
         , onFocus address (Focus ( i, j ))
-        , onBlur address Blur
         ]
         []
     ]
@@ -331,8 +336,8 @@ header model =
       (td [] [] :: ((Array.indexedMap (\i a -> th [] [ text (toLiteral (i + 1)) ]) r) |> Array.toList))
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+sheet : Signal.Address Action -> Model -> Html
+sheet address model =
   table
     [ class "table" ]
     [ tbody
@@ -341,6 +346,19 @@ view address model =
           [ header model ]
           (Array.indexedMap (row model address) model.values |> Array.toList)
         )
+    ]
+
+
+view : Signal.Address Action -> Model -> Html
+view address model =
+  div
+    [ class "container" ]
+    [ input
+        [ value (getFocusedValue model)
+        , on "input" targetValue (Signal.message address << UpdateCell model.focused)
+        ]
+        []
+    , sheet address model
     ]
 
 
