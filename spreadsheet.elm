@@ -89,12 +89,14 @@ extractValue model i j m =
     Right str ->
       case Regex.contains (Regex.regex "^=") str of
         True ->
-          case model.focused of
-            ( i', j' ) ->
-              if (i == i') && (j == j') then
-                str
-              else
-                extractValue model i j (evalFormula model str)
+          let
+            ( i', j' ) =
+              model.focused
+          in
+            if (i == i') && (j == j') then
+              str
+            else
+              extractValue model i j (evalFormula model str)
 
         False ->
           str
