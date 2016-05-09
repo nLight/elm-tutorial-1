@@ -87,19 +87,10 @@ extractValue model i j m =
       toString value
 
     Right str ->
-      case Regex.contains (Regex.regex "^=") str of
-        True ->
-          let
-            ( i', j' ) =
-              model.focused
-          in
-            if (i == i') && (j == j') then
-              str
-            else
-              extractValue model i j (evalFormula model str)
-
-        False ->
-          str
+      if ( i, j ) == model.focused then
+        str
+      else
+        evalFormula model i j str
 
 
 
@@ -109,18 +100,18 @@ extractValue model i j m =
 -}
 
 
-evalFormula : Model -> String -> CellModel
-evalFormula model formula =
+evalFormula : Model -> Int -> Int -> String -> String
+evalFormula model i j formula =
   let
     matches =
       find (AtMost 1) (regex "^=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)$") formula
   in
     case matches of
       [ match ] ->
-        evalMatch model match
+        extractValue model i j (evalMatch model match)
 
       _ ->
-        Right formula
+        formula
 
 
 
