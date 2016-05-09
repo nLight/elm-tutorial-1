@@ -16,6 +16,10 @@ type Either a b
   | Right b
 
 
+type alias Coords =
+  ( Int, Int )
+
+
 type alias CellModel =
   Either Float String
 
@@ -31,9 +35,9 @@ type alias Model =
 
 
 type Action
-  = UpdateCell Int Int String
-  | Focus Int Int
-  | Blur Int Int
+  = UpdateCell Coords String
+  | Focus Coords
+  | Blur
 
 
 convertValue : String -> CellModel
@@ -49,13 +53,13 @@ convertValue val =
 update : Action -> Model -> Model
 update action model =
   case action of
-    Focus i j ->
-      { model | focused = ( i, j ) }
+    Focus coords ->
+      { model | focused = coords }
 
-    Blur i j ->
+    Blur ->
       { model | focused = ( -1, -1 ) }
 
-    UpdateCell i j val ->
+    UpdateCell ( i, j ) val ->
       let
         val' =
           convertValue val
@@ -80,17 +84,17 @@ update action model =
 -}
 
 
-extractValue : Model -> Int -> Int -> CellModel -> String
-extractValue model i j m =
+extractValue : Model -> Coords -> CellModel -> String
+extractValue model coords m =
   case m of
     Left value ->
       toString value
 
     Right str ->
-      if ( i, j ) == model.focused then
+      if coords == model.focused then
         str
       else
-        evalFormula model i j str
+        evalFormula model coords str
 
 
 
@@ -100,15 +104,15 @@ extractValue model i j m =
 -}
 
 
-evalFormula : Model -> Int -> Int -> String -> String
-evalFormula model i j formula =
+evalFormula : Model -> Coords -> String -> String
+evalFormula model coords formula =
   let
     matches =
       find (AtMost 1) (regex "^=(sum|mul|div)\\((\\d+):(\\d+)\\,(\\d+):(\\d+)\\)$") formula
   in
     case matches of
       [ match ] ->
-        extractValue model i j (evalMatch model match)
+        extractValue model coords (evalMatch model match)
 
       _ ->
         formula
@@ -275,10 +279,10 @@ cell model address i j cellVal =
   td
     []
     [ input
-        [ value (extractValue model i j cellVal)
-        , on "input" targetValue (Signal.message address << UpdateCell i j)
-        , onFocus address (Focus i j)
-        , onBlur address (Blur i j)
+        [ value (extractValue model ( i, j ) cellVal)
+        , on "input" targetValue (Signal.message address << UpdateCell ( i, j ))
+        , onFocus address (Focus ( i, j ))
+        , onBlur address Blur
         ]
         []
     ]
