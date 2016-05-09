@@ -144,10 +144,10 @@ evalMatch model match =
           Result.withDefault 0 (String.toInt j2)
 
         cell1 =
-          getCellVal model i1' j1'
+          getCellVal model (i1' - 1) (j1' - 1)
 
         cell2 =
-          getCellVal model i2' j2'
+          getCellVal model (i2' - 1) (j2' - 1)
       in
         case [ cell1, cell2 ] of
           [ Left c1, Left c2 ] ->
