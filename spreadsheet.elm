@@ -144,10 +144,10 @@ evalMatch model match =
           Result.withDefault 0 (String.toInt j2)
 
         cell1 =
-          getCellVal model (j1' - 1) (i1' - 1)
+          getCellVal model ( (j1' - 1), (i1' - 1) )
 
         cell2 =
-          getCellVal model (j2' - 1) (i2' - 1)
+          getCellVal model ( (j2' - 1), (i2' - 1) )
       in
         case [ cell1, cell2 ] of
           [ Left c1, Left c2 ] ->
@@ -176,8 +176,8 @@ applyOp op c1 c2 =
       Right "Error! Unknown operator."
 
 
-getCellVal : Model -> Int -> Int -> CellModel
-getCellVal model i j =
+getCellVal : Model -> Coords -> CellModel
+getCellVal model ( i, j ) =
   let
     r =
       withDefault Array.empty <| Array.get i model.values
