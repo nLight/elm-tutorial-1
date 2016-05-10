@@ -1,4 +1,4 @@
-module Spreadsheet (..) where
+module Spreadsheet exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (id, class, value)
@@ -31,7 +31,7 @@ type alias Model =
   }
 
 
-type Action
+type Msg
   = UpdateCell (Maybe Coords) String
   | Focus Coords
 
@@ -51,9 +51,9 @@ convertValue val =
       Right val
 
 
-update : Action -> Model -> Model
-update action model =
-  case action of
+update : Msg -> Model -> Model
+update message model =
+  case message of
     Focus coords ->
       { model | focused = Just coords }
 
@@ -206,12 +206,12 @@ getFocusedValue model =
 {-
 Разберем обработчик события
 
-  on "input" targetValue (\value -> Signal.message address (UpdateCell i j value))
+  on "input" targetValue (\value -> Signal.message (UpdateCell i j value))
 
   По событию "input" взять target.value из объекта event
   и вызвать обработчик типа UpdateCell с координатами ячейки и новым значением (target.value) для нее
 
-  address, i, j - уже известны, это аргументы функции cell, они не изменятся.
+ , i, j - уже известны, это аргументы функции cell, они не изменятся.
   Упростим запись сгруппировав уже известные переменные под новыми функциями:
 
     on "input" targetValue (\value -> messageToAddress (updateCellIJ value))
@@ -225,7 +225,7 @@ getFocusedValue model =
 
   Если мы вернемся к полной записи функций, то это будет выглядеть вот так:
 
-    on "input" targetValue (Signal.message address << UpdateCell i j)
+    on "input" targetValue (Signal.message << UpdateCell i j)
 
 Разберем, как это работает
 
@@ -264,10 +264,10 @@ getFocusedValue model =
 Наша цель получить функцию с сигнатурой
   sendMessage : CellModel -> Message
 
-Частично применяем 1. функцию, чтобы замкнуть address:
+Частично применяем 1. функцию, чтобы замкнуть:
 
   messageToAddress : Action -> Message
-  messageToAddress = Signal.message address
+  messageToAddress = Signal.message
 
 Частично применям 2. функцию, чтобы замнкуть уже известные i и j
 
@@ -291,8 +291,8 @@ getFocusedValue model =
 -}
 
 
-cell : Model -> Signal.Address Action -> Coords -> Html
-cell model address coords =
+cell : Model -> Coords -> Html
+cell model coords =
   let
     cellVal =
       Dict.get (getIndex coords) model.values
@@ -301,21 +301,21 @@ cell model address coords =
       []
       [ input
           [ value (extractValue model coords cellVal)
-          , on "input" targetValue (Signal.message address << UpdateCell (Just coords))
-          , onFocus address (Focus coords)
+          , on "input" targetValue (Signal.message << UpdateCell (Just coords))
+          , onFocus (Focus coords)
           ]
           []
       ]
 
 
-row : Model -> Signal.Address Action -> Int -> Html
-row model address i =
+row : Model -> Int -> Html
+row model i =
   let
     sizeArray =
       Array.repeat defaultSize 0
 
     cells =
-      Array.indexedMap (\j el -> cell model address ( i, j )) sizeArray |> Array.toList
+      Array.indexedMap (\j el -> cell model ( i, j )) sizeArray |> Array.toList
   in
     tr
       []
@@ -333,8 +333,8 @@ header model =
       (td [] [] :: ((Array.indexedMap (\i a -> th [] [ text (toLiteral (i + 1)) ]) r) |> Array.toList))
 
 
-sheet : Signal.Address Action -> Model -> Html
-sheet address model =
+sheet : Model -> Html
+sheet model =
   let
     sheetArray =
       Array.repeat defaultSize 0
@@ -345,21 +345,21 @@ sheet address model =
           []
           (List.append
             [ header model ]
-            (Array.indexedMap (\i el -> row model address i) sheetArray |> Array.toList)
+            (Array.indexedMap (\i el -> row model i) sheetArray |> Array.toList)
           )
       ]
 
 
-view : Signal.Address Action -> Model -> Html
-view address model =
+view : Model -> Html
+view model =
   div
     [ class "container" ]
     [ input
         [ value (getFocusedValue model)
-        , on "input" targetValue (Signal.message address << UpdateCell model.focused)
+        , on "input" targetValue (Signal.message << UpdateCell model.focused)
         ]
         []
-    , sheet address model
+    , sheet model
     ]
 
 
@@ -402,4 +402,5 @@ model =
 
 main : Signal Html
 main =
-  start { model = model, update = update, view = view }
+  Html.beginnerProgram =
+    { model = model, update = update, view = view }
