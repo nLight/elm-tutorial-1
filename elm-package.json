@@ -1,6 +1,6 @@
 {
     "version": "1.0.0",
-    "summary": "Elm Tutorial 1. Basic spread sheed in Elm",
+    "summary": "Elm Tutorial 1. Implementing basic spreadsheet in Elm",
     "repository": "https://github.com/nLight/elm-tutorial-1.git",
     "license": "BSD3",
     "source-directories": [
