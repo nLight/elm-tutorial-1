@@ -2,8 +2,8 @@ module Spreadsheet exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (id, class, value)
-import Html.Events exposing (on, onFocus, onBlur, targetValue)
-import StartApp.Simple exposing (start)
+import Html.Events exposing (onInput, onFocus, onBlur, targetValue)
+import Html.App as HtmlApp
 import Array exposing (Array)
 import Maybe
 import Char
@@ -291,7 +291,7 @@ getFocusedValue model =
 -}
 
 
-cell : Model -> Coords -> Html
+cell : Model -> Coords -> Html Msg
 cell model coords =
   let
     cellVal =
@@ -301,14 +301,14 @@ cell model coords =
       []
       [ input
           [ value (extractValue model coords cellVal)
-          , on "input" targetValue (Signal.message << UpdateCell (Just coords))
+          , onInput (UpdateCell (Just coords))
           , onFocus (Focus coords)
           ]
           []
       ]
 
 
-row : Model -> Int -> Html
+row : Model -> Int -> Html Msg
 row model i =
   let
     sizeArray =
@@ -322,7 +322,7 @@ row model i =
       (th [] [ text (toString (i + 1)) ] :: cells)
 
 
-header : Model -> Html
+header : Model -> Html Msg
 header model =
   let
     r =
@@ -333,7 +333,7 @@ header model =
       (td [] [] :: ((Array.indexedMap (\i a -> th [] [ text (toLiteral (i + 1)) ]) r) |> Array.toList))
 
 
-sheet : Model -> Html
+sheet : Model -> Html Msg
 sheet model =
   let
     sheetArray =
@@ -350,13 +350,13 @@ sheet model =
       ]
 
 
-view : Model -> Html
+view : Model -> Html Msg
 view model =
   div
     [ class "container" ]
     [ input
         [ value (getFocusedValue model)
-        , on "input" targetValue (Signal.message << UpdateCell model.focused)
+        , onInput (UpdateCell model.focused)
         ]
         []
     , sheet model
@@ -400,7 +400,5 @@ model =
   }
 
 
-main : Signal Html
 main =
-  Html.beginnerProgram =
-    { model = model, update = update, view = view }
+  HtmlApp.beginnerProgram { model = model, update = update, view = view }
