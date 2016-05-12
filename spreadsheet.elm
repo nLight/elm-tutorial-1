@@ -6,10 +6,10 @@ import Html.Events exposing (onInput, onFocus, onBlur, targetValue)
 import Html.App as HtmlApp
 import Array exposing (Array)
 import Maybe
-import Char
 import String
 import Dict exposing (Dict)
 import Regex exposing (..)
+import Int2Literal
 
 
 type Either a b
@@ -171,7 +171,7 @@ getIndex coords =
         j =
             snd coords + 1
     in
-        String.join "" [ toLiteral j, toString i ]
+        String.join "" [ Int2Literal.convert j, toString i ]
 
 
 getCellVal : Model -> Coords -> Maybe CellModel
@@ -238,7 +238,7 @@ header model =
             Array.repeat defaultSize 0
     in
         tr []
-            (td [] [] :: ((Array.indexedMap (\i a -> th [] [ text (toLiteral (i + 1)) ]) r) |> Array.toList))
+            (td [] [] :: ((Array.indexedMap (\i a -> th [] [ text (Int2Literal.convert (i + 1)) ]) r) |> Array.toList))
 
 
 sheet : Model -> Html Msg
@@ -257,7 +257,7 @@ sheet model =
 
 view : Model -> Html Msg
 view model =
-    div [ class "container" ]
+    div []
         [ input
             [ value (getFocusedValue model)
             , onInput (UpdateCell model.focused)
@@ -265,36 +265,6 @@ view model =
             []
         , sheet model
         ]
-
-
-fromLiteral : String -> Int
-fromLiteral str =
-    String.toList str |> List.map Char.toCode |> List.foldr (+) 0
-
-
-toLiteral : Int -> String
-toLiteral i =
-    toLiteral' "" i
-
-
-toLiteral' : String -> Int -> String
-toLiteral' acc i =
-    case i of
-        0 ->
-            acc
-
-        _ ->
-            let
-                modulo =
-                    (i - 1) % 26
-
-                name =
-                    (Char.fromCode (65 + modulo) |> String.fromChar) ++ acc
-
-                i' =
-                    (i - modulo) // 26
-            in
-                toLiteral' name i'
 
 
 model : Model
